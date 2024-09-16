@@ -78,6 +78,9 @@ def restaurant_list(request):
                 return render(request, 'restaurants/restaurant_list.html', {'error': str(e)})
         else:
             return render(request, 'restaurants/restaurant_list.html', {'error': 'Location not provided.'})
+        
+        return render(request, 'restaurants/POST_restaurant_list.html', {'restaurants': closest_restaurants})
+        
     # render with the closest restaurants data
     return render(request, 'restaurants/restaurant_list.html', {'restaurants': closest_restaurants})
 
