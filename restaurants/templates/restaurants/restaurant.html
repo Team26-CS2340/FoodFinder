@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Search</title>
+    <style>
+        .restaurant-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .gallery img {
+            width: 150px;
+            height: auto;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .error {
+            color: red;
+        }
+        .restaurant-details, .cuisine-restaurants {
+            margin-top: 20px;
+        }
+        .restaurant-details p, .cuisine-restaurants li {
+            margin: 5px 0;
+        }
+        .cuisine-restaurants ul {
+            list-style: none;
+            padding: 0;
+        }
+        .cuisine-restaurants li {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+    <script>
+        function handleCuisineSearch() {
+            const nearMeCheckbox = document.querySelector('input[name="near_me"]');
+
+            if (nearMeCheckbox.checked) {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function(position) {
+                        document.querySelector('input[name="latitude"]').value = position.coords.latitude;
+                        document.querySelector('input[name="longitude"]').value = position.coords.longitude;
+                        document.getElementById("cuisine-form").submit();
+                    }, function(error) {
+                        alert("Error getting location. Please allow location access.");
+                    });
+                } else {
+                    alert("Geolocation is not supported by this browser.");
+                }
+            } else {
+                document.getElementById("cuisine-form").submit();
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="restaurant-container">
+        <h1>Search for a Restaurant</h1>
+
+        <!-- Search by Restaurant Name -->
+        <form method="post">
+            {% csrf_token %}
+            <div class="search-container">
+                <input type="text" name="restaurant_name" placeholder="Enter restaurant name">
+                <button type="submit">Search by Name</button>
+            </div>
+        </form>
+
+        <!-- Search by Cuisine with Near Me option -->
+        <form method="post" id="cuisine-form">
+            {% csrf_token %}
+            <div class="search-container">
+                <input type="text" name="cuisine_type" placeholder="Enter cuisine type">
+                <!-- Hidden fields to store location coordinates -->
+                <input type="hidden" name="latitude" value="">
+                <input type="hidden" name="longitude" value="">
+                <!-- Checkbox for Near Me -->
+                <label>
+                    <input type="checkbox" name="near_me">
+                    Near Me
+                </label>
+                <button type="button" onclick="handleCuisineSearch()">Search by Cuisine</button>
+            </div>
+        </form>
+
+        <!-- Display errors if any -->
+        {% if error %}
+            <div class="error">
+                <p>{{ error }}</p>
+            </div>
+        {% endif %}
+
+        <!-- Display restaurant details if available -->
+        {% if restaurant %}
+            <div class="restaurant-details">
+                <h2>{{ restaurant.name }}</h2>
+                <p><strong>Address:</strong> {{ restaurant.formatted_address }}</p>
+                <p><strong>Rating:</strong> {{ restaurant.rating }} ({{ restaurant.user_ratings_total }} ratings)</p>
+                <p><strong>Phone:</strong> {{ restaurant.formatted_phone_number }}</p>
+                <p><strong>Business Status:</strong> {{ restaurant.business_status }}</p>
+                <p><strong>Price Level:</strong> {{ restaurant.price_level }}</p>
+                <p><strong>Website:</strong> <a href="{{ restaurant.website }}" target="_blank">{{ restaurant.website }}</a></p>
+                <p><strong>Google Maps:</strong> <a href="{{ restaurant.url }}" target="_blank">View on Google Maps</a></p>
+            </div>
+
+            <!-- Display restaurant photos if available -->
+            {% if photos %}
+                <div class="gallery">
+                    {% for photo in photos %}
+                        <img src="{{ photo }}" alt="Restaurant Photo">
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endif %}
+
+        <!-- Display restaurants for the selected cuisine -->
+        {% if cuisine_restaurants %}
+            <h2>Restaurants serving {{ cuisine_type }} cuisine</h2>
+            <div class="cuisine-restaurants">
+                <ul>
+                    {% for restaurant in cuisine_restaurants %}
+                        <li>
+                            <h3>{{ restaurant.name }}</h3>
+                            <p><strong>Address:</strong> {{ restaurant.formatted_address }}</p>
+                            <p><strong>Rating:</strong> {{ restaurant.rating }} ({{ restaurant.user_ratings_total }} ratings)</p>
+                            <p><strong>Business Status:</strong> {{ restaurant.business_status }}</p>
+                            <p><strong>Price Level:</strong> {{ restaurant.price_level }}</p>
+                            <p><strong>Google Maps URL:</strong> <a href="https://maps.google.com/?q={{ restaurant.name|urlencode }}" target="_blank">View on Google Maps</a></p>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
