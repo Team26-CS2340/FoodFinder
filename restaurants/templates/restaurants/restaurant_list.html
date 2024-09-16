@@ -56,10 +56,26 @@
                 'X-CSRFToken': '{{ csrf_token }}'  // Include the CSRF token for Django
             }
         })
-        .then(response => response.text())
-        .then(html => {
-            // replace 'restaurant-list' div with the new html
-            document.getElementById('restaurant-list').innerHTML = html;
+        .then(response => response.json())
+        .then(data => {
+            const restaurantList = document.getElementById('restaurant-list');
+            restaurantList.innerHTML = '';  // Clear previous content
+
+            data.restaurants.forEach(restaurant => {
+                const card = `
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">${restaurant.name}</h5>
+                                <p class="card-text"><strong>Cuisine:</strong> ${restaurant.cuisine}</p>
+                                <p class="card-text"><strong>Rating:</strong> ${restaurant.rating} / 5</p>
+                                <p class="card-text"><strong>Address:</strong> ${restaurant.address}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                restaurantList.innerHTML += card;
+            });
         })
         .catch(error => console.error('Error:', error));
     }
