@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Restaurant Details{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    {% if restaurant %}
+        <h2 class="text-center">{{ restaurant.name }}</h2>
+        <p><strong>Address:</strong> {{ restaurant.formatted_address }}</p>
+        <p><strong>Rating:</strong> {{ restaurant.rating }}</p>
+        <p><strong>Phone:</strong> {{ restaurant.formatted_phone_number }}</p>
+        <p><strong>Opening Hours:</strong>
+            {% if restaurant.opening_hours %}
+                {{ restaurant.opening_hours.weekday_text|join:", " }}
+            {% else %}
+                Not Available
+            {% endif %}
+        </p>
+        <p><strong>Price Level:</strong> {{ restaurant.price_level }}</p>
+        <p><strong>Business Status:</strong> {{ restaurant.business_status }}</p>
+        <p><a href="{{ restaurant.website }}" target="_blank">Visit Website</a></p>
+
+        <h3>Photos</h3>
+        <div class="row">
+            {% for photo in photos %}
+            <div class="col-md-4 mb-4">
+                <img src="{{ photo }}" class="img-fluid rounded" alt="Restaurant Photo">
+            </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <p>Restaurant details not available.</p>
+    {% endif %}
+</div>
+{% endblock %}

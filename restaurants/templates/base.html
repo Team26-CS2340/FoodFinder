@@ -29,13 +29,16 @@
                     <li><a href="#" class="nav-link px-2 text-white">About</a></li>
                 </ul>
 
-                <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
-                    <input type="search" class="form-control form-control-dark text-bg-dark" placeholder="Search..." aria-label="Search">
-                </form>
-
                 <div class="text-end">
-                    <a href="{% url 'login' %}" class="btn btn-outline-light me-2">Login</a>
-                    <a href="{% url 'register' %}" class="btn btn-warning">Sign-up</a>
+                    {% if user.is_authenticated %}
+                        <!-- Display welcome message and logout option for logged-in users -->
+                        <span class="text-white me-3">Welcome, {{ user.first_name }}</span>
+                        <a href="{% url 'logout' %}" class="btn btn-outline-light">Sign out</a>
+                    {% else %}
+                        <!-- Display login and signup buttons for non-authenticated users -->
+                        <a href="{% url 'login' %}" class="btn btn-outline-light me-2">Login</a>
+                        <a href="{% url 'register' %}" class="btn btn-warning">Sign-up</a>
+                    {% endif %}
                 </div>
             </div>
         </div>

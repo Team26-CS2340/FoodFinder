@@ -8,6 +8,9 @@ from django.conf import settings
 from django.http import JsonResponse
 import googlemaps
 import requests
+# Import the UserProfile model at the top of views.py
+from .models import UserProfile
+
 
 
 def login_view(request):
@@ -85,8 +88,34 @@ def restaurant_list(request):
     # render with the closest restaurants data
     return render(request, 'restaurants/restaurant_list.html', {'restaurants': closest_restaurants})
 
+
 def home(request):
-    return render(request, 'restaurants/home.html')
+    favorite_restaurants = []
+
+    if request.user.is_authenticated:
+        try:
+            # Fetch user's favorite cuisine from the profile
+            user_profile = UserProfile.objects.get(user=request.user)
+            favorite_cuisine = user_profile.favorite_cuisine
+
+            # Get restaurants by user's favorite cuisine
+            favorite_restaurants, error = get_restaurants_by_cuisine(favorite_cuisine)
+
+            if error:
+                favorite_restaurants = []  # Handle the case where there's an error
+
+            # Limit the number of restaurants to 3
+            favorite_restaurants = favorite_restaurants[:3]
+
+        except UserProfile.DoesNotExist:
+            # If the user does not have a profile or favorite cuisine set, handle the case
+            favorite_cuisine = None
+            favorite_restaurants = []
+
+    return render(request, 'restaurants/home.html', {
+        'favorite_restaurants': favorite_restaurants
+    })
+
 
 # Search for a restaurant 
 
@@ -142,6 +171,21 @@ def get_restaurant_details(restaurant_name):
             photos.append(photo_url)
 
     return restaurant, photos, None
+
+
+def restaurant_details_view(request, restaurant_name):
+    # Get the restaurant details using the provided method
+    restaurant_details, photos, error = get_restaurant_details(restaurant_name)
+
+    if error:
+        return render(request, 'restaurants/restaurantdetails.html', {'error': error})
+
+    # Pass the restaurant details and photos to the template
+    context = {
+        'restaurant': restaurant_details,
+        'photos': photos
+    }
+    return render(request, 'restaurants/restaurantdetails.html', context)
 
 
 def get_restaurants_by_cuisine(cuisine, location="33.7490,-84.3880", radius=5000):
