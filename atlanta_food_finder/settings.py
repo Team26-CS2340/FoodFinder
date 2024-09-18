@@ -51,6 +51,10 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "atlanta_food_finder.urls"
+LOGIN_REDIRECT_URL = 'home'  # or whatever page you want to redirect to after login
+LOGOUT_REDIRECT_URL = 'home'
+  # where the user should go after logging out
+
 
 TEMPLATES = [
     {
