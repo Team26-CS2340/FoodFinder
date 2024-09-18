@@ -63,7 +63,7 @@ def restaurant_list(request):
                 )
 
                 # details of the closest restaurants
-                for place in places_result['results'][:3]:
+                for place in places_result['results'][:9]:
                     restaurant = {
                         'name': place.get('name'),
                         'rating': place.get('rating'),
@@ -220,3 +220,16 @@ def search_restaurant(request):
             return render(request, 'restaurants/restaurant.html', context)
 
     return render(request, 'restaurants/restaurant.html')
+
+def map(request):
+    # Default location (e.g., Atlanta)
+    default_location = {
+        'lat': 33.7490,
+        'lng': -84.3880,
+    }
+    # Pass Google Maps API key and default location to the template
+    context = {
+        'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
+        'default_location': default_location,
+    }
+    return render(request, 'restaurants/map.html', context)
