@@ -66,7 +66,7 @@ def restaurant_list(request):
                 )
 
                 # details of the closest restaurants
-                for place in places_result['results'][:3]:
+                for place in places_result['results'][:10]:
                     restaurant = {
                         'name': place.get('name'),
                         'rating': place.get('rating'),
