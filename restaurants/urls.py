@@ -2,6 +2,7 @@ from django.urls import path
 from django.contrib.auth import logout
 from django.shortcuts import redirect
 from . import views
+from django.contrib.auth import views as auth_views
 
 
 def custom_logout_view(request):
@@ -15,7 +16,14 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('restaurants/', views.restaurant_list, name='restaurant_list'),
     path('restaurant/', views.search_restaurant, name='restaurant-search'),
-    path('logout/', custom_logout_view, name='logout'),  # Use custom logout view
-    path('restaurant/<str:restaurant_name>/', views.restaurant_details_view, name='restaurant_details'),  # New URL pattern
+    path('logout/', custom_logout_view, name='logout'),
+    path('restaurant/<str:restaurant_name>/', views.restaurant_details_view, name='restaurant_details'),
+    path('profile/', views.profile_view, name='profile'),
+
+
+    path('password_reset/', auth_views.PasswordResetView.as_view(), name='password_reset'),
+    path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
+    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(success_url='/login'), name='password_reset_confirm'),
+    path('reset/done/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
     path('map/', views.map, name='map'),
 ]
