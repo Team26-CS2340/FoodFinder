@@ -17,4 +17,5 @@ urlpatterns = [
     path('restaurant/', views.search_restaurant, name='restaurant-search'),
     path('logout/', custom_logout_view, name='logout'),  # Use custom logout view
     path('restaurant/<str:restaurant_name>/', views.restaurant_details_view, name='restaurant_details'),  # New URL pattern
+    path('map/', views.map, name='map'),
 ]
