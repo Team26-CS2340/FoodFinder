@@ -43,7 +43,6 @@ def signup_view(request):
 
     return render(request, 'restaurants/register.html', {'form': form})
 
-
 def restaurant_list(request):
     closest_restaurants = []
 
@@ -51,34 +50,38 @@ def restaurant_list(request):
         user_lat = request.POST.get('lat')
         user_lng = request.POST.get('lng')
 
-        if user_lat and user_lng:
-            try:
-                # Initialize Google Maps client
-                gmaps = googlemaps.Client(key=settings.GOOGLE_MAPS_API_KEY)
+        # Store the user's location in the session to prevent repeated submissions
+        request.session['user_lat'] = user_lat
+        request.session['user_lng'] = user_lng
 
-                # Get restaurants near the user's location
-                places_result = gmaps.places_nearby(
-                    location=(float(user_lat), float(user_lng)),
-                    rank_by='distance',
-                    type='restaurant'
-                )
+    else:
+        # Check if location is already stored in the session
+        user_lat = request.session.get('user_lat')
+        user_lng = request.session.get('user_lng')
 
-                # Fetch the details of each restaurant
-                for place in places_result['results'][:10]:  # Limit to 10 results
-                    restaurant = {
-                        'name': place.get('name'),
-                        'rating': place.get('rating'),
-                        'address': place.get('vicinity'),
-                        'cuisine': place.get('types', []),
-                        'images': [f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo['photo_reference']}&key={settings.GOOGLE_MAPS_API_KEY}" for photo in place.get('photos', [])[:1]]
-                    }
-                    closest_restaurants.append(restaurant)
-            except Exception as e:
-                return render(request, 'restaurants/restaurant_list.html', {'error': str(e)})
+    if user_lat and user_lng:
+        try:
+            gmaps = googlemaps.Client(key=settings.GOOGLE_MAPS_API_KEY)
+            places_result = gmaps.places_nearby(
+                location=(float(user_lat), float(user_lng)),
+                rank_by='distance',
+                type='restaurant'
+            )
 
-    # Render the page with the list of restaurants
+            for place in places_result['results'][:10]:
+                restaurant = {
+                    'name': place.get('name'),
+                    'rating': place.get('rating'),
+                    'address': place.get('vicinity'),
+                    'cuisine': place.get('types', []),
+                    'images': [f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo['photo_reference']}&key={settings.GOOGLE_MAPS_API_KEY}" for photo in place.get('photos', [])[:1]]
+                }
+                closest_restaurants.append(restaurant)
+
+        except Exception as e:
+            return render(request, 'restaurants/restaurant_list.html', {'error': str(e)})
+
     return render(request, 'restaurants/restaurant_list.html', {'restaurants': closest_restaurants})
-
 def home(request):
     favorite_restaurants = []
 
