@@ -46,44 +46,38 @@ def signup_view(request):
 
 def restaurant_list(request):
     closest_restaurants = []
-    # get users location 
-    if request.method == 'POST':
-        user_lat = request.POST.get('lat', None)
-        user_lng = request.POST.get('lng', None)
 
-        #if location permissions not allowed
+    if request.method == 'POST':
+        user_lat = request.POST.get('lat')
+        user_lng = request.POST.get('lng')
+
         if user_lat and user_lng:
             try:
-                # initialize google maps client
+                # Initialize Google Maps client
                 gmaps = googlemaps.Client(key=settings.GOOGLE_MAPS_API_KEY)
 
+                # Get restaurants near the user's location
                 places_result = gmaps.places_nearby(
                     location=(float(user_lat), float(user_lng)),
-                    # radius=3000,  # 3 km radius for nearby places <- rank_by='distance' is used instead bc its more accurate
                     rank_by='distance',
                     type='restaurant'
                 )
 
-                # details of the closest restaurants
-                for place in places_result['results'][:9]:
+                # Fetch the details of each restaurant
+                for place in places_result['results'][:10]:  # Limit to 10 results
                     restaurant = {
                         'name': place.get('name'),
                         'rating': place.get('rating'),
                         'address': place.get('vicinity'),
-                        'cuisine': place.get('types', [])  # types isnt exactly cuisine so we prob need to delete
+                        'cuisine': place.get('types', []),
+                        'images': [f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo['photo_reference']}&key={settings.GOOGLE_MAPS_API_KEY}" for photo in place.get('photos', [])[:1]]
                     }
                     closest_restaurants.append(restaurant)
-                
             except Exception as e:
                 return render(request, 'restaurants/restaurant_list.html', {'error': str(e)})
-        else:
-            return render(request, 'restaurants/restaurant_list.html', {'error': 'Location not provided.'})
-        
-        return JsonResponse({'restaurants': closest_restaurants})
-        
-    # render with the closest restaurants data
-    return render(request, 'restaurants/restaurant_list.html', {'restaurants': closest_restaurants})
 
+    # Render the page with the list of restaurants
+    return render(request, 'restaurants/restaurant_list.html', {'restaurants': closest_restaurants})
 
 def home(request):
     favorite_restaurants = []

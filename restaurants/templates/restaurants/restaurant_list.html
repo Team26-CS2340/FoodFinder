@@ -5,10 +5,11 @@
 {% block content %}
 <div class="container mt-5">
     <h2 class="text-center">Restaurants</h2>
+
     <div class="row justify-content-center" id="restaurant-list">
         {% if restaurants %}
             {% for restaurant in restaurants %}
-                <div class="col-md-4 mb-4">
+                <div class="col-md-5 mb-5">
                     <div class="card h-100">
                         {% if restaurant.images %}
                             <img src="{{ restaurant.images.0 }}" alt="Restaurant Image" class="card-img-top">
@@ -18,27 +19,31 @@
                             <p class="card-text"><strong>Cuisine:</strong> {{ restaurant.cuisine }}</p>
                             <p class="card-text"><strong>Rating:</strong> {{ restaurant.rating }} / 5</p>
                             <p class="card-text"><strong>Address:</strong> {{ restaurant.address }}</p>
+                            <div class="btn-group">
+                                <a href="{% url 'restaurant_details' restaurant.name %}" class="btn btn-sm btn-outline-secondary">View</a>
+                            </div>
                         </div>
                     </div>
                 </div>
             {% endfor %}
         {% else %}
-            <p>Loading nearby restaurants...</p>
+            <p>No restaurants found. Enable geolocation to view nearby restaurants.</p>
         {% endif %}
     </div>
 </div>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        getLocationAndSend();
+        if (!sessionStorage.getItem('locationSent')) {
+            getLocationAndSend();
+        }
     });
 
     function getLocationAndSend() {
-        // Check if geolocation is available in the user's browser
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(sendLocationToServer, handleError);
         } else {
-            alert("Location is not supported by this browser.");
+            alert("Geolocation is not supported by this browser.");
         }
     }
 
@@ -46,49 +51,33 @@
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
 
-        // Create a FormData object to send coordinates to the server
-        const formData = new FormData();
-        formData.append('lat', lat);
-        formData.append('lng', lng);
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{% url 'restaurant_list' %}";
 
-        // Send the POST request to the Django view to get the restaurants
-        fetch("{% url 'restaurant_list' %}", {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}'  // Include the CSRF token for Django
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            const restaurantList = document.getElementById('restaurant-list');
-            restaurantList.innerHTML = '';  // Clear previous content
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'csrfmiddlewaretoken';
+        csrfToken.value = '{{ csrf_token }}';
+        form.appendChild(csrfToken);
 
-            if (data.restaurants && data.restaurants.length > 0) {
-                data.restaurants.forEach(restaurant => {
-                    const card = `
-                        <div class="col-md-4 mb-4">
-                            <div class="card h-100">
-                                ${restaurant.images ? `<img src="${restaurant.images[0]}" alt="Restaurant Image" class="card-img-top">` : ''}
-                                <div class="card-body">
-                                    <h5 class="card-title">${restaurant.name}</h5>
-                                    <p class="card-text"><strong>Cuisine:</strong> ${restaurant.cuisine}</p>
-                                    <p class="card-text"><strong>Rating:</strong> ${restaurant.rating} / 5</p>
-                                    <p class="card-text"><strong>Address:</strong> ${restaurant.address}</p>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    restaurantList.innerHTML += card;
-                });
-            } else {
-                restaurantList.innerHTML = '<p>No restaurants found.</p>';
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('restaurant-list').innerHTML = '<p>Error loading restaurants.</p>';
-        });
+        const latInput = document.createElement('input');
+        latInput.type = 'hidden';
+        latInput.name = 'lat';
+        latInput.value = lat;
+        form.appendChild(latInput);
+
+        const lngInput = document.createElement('input');
+        lngInput.type = 'hidden';
+        lngInput.name = 'lng';
+        lngInput.value = lng;
+        form.appendChild(lngInput);
+
+        // Save to session storage to avoid repeated requests
+        sessionStorage.setItem('locationSent', true);
+
+        document.body.appendChild(form);
+        form.submit();
     }
 
     function handleError(error) {
