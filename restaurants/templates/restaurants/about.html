@@ -1,0 +1,26 @@
+
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+</head>
+<body>
+    <header>
+        <h1 style="text-align: center; margin: 30px 0;">About Us</h1>
+    </header>
+    <main>
+        <p>Welcome to our website! We are passionate about providing high-quality content and services.</p>
+        <p>Our team is dedicated to making your experience enjoyable and informative.</p>
+    </main>
+</body>
+
+{% endblock %}
