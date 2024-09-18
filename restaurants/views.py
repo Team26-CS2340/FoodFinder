@@ -1,14 +1,13 @@
 # restaurants/views.py
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
-from .forms import UserRegistrationForm
+from .forms import UserRegistrationForm, UserForm, UserProfileForm
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import AuthenticationForm
 from django.conf import settings
 from django.http import JsonResponse
 import googlemaps
 import requests
-# Import the UserProfile model at the top of views.py
 from .models import UserProfile
 
 
@@ -267,3 +266,29 @@ def search_restaurant(request):
             return render(request, 'restaurants/restaurant.html', context)
 
     return render(request, 'restaurants/restaurant.html')
+
+def profile_view(request):
+    user = request.user
+    try:
+        user_profile = UserProfile.objects.get(user=user)
+    except UserProfile.DoesNotExist:
+        user_profile = None
+
+    if request.method == 'POST':
+        user_form = UserForm(request.POST, instance=user)
+        profile_form = UserProfileForm(request.POST, instance=user_profile)
+
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            return redirect('profile')  # Redirect to the profile page after saving
+
+    else:
+        user_form = UserForm(instance=user)
+        profile_form = UserProfileForm(instance=user_profile)
+
+    return render(request, 'restaurants/profile.html', {
+        'user_form': user_form,
+        'profile_form': profile_form
+    })
+

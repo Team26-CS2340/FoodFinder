@@ -53,8 +53,14 @@ MIDDLEWARE = [
 ROOT_URLCONF = "atlanta_food_finder.urls"
 LOGIN_REDIRECT_URL = 'home'  # or whatever page you want to redirect to after login
 LOGOUT_REDIRECT_URL = 'home'
-  # where the user should go after logging out
-
+# settings.py
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'finddiningatl@gmail.com'
+EMAIL_HOST_PASSWORD = 'rmkedgifxmudutpw'
+DEFAULT_FROM_EMAIL = 'finddiningatl@gmail.com'
 
 TEMPLATES = [
     {
