@@ -42,15 +42,15 @@ def signup_view(request):
         form = UserRegistrationForm()
 
     return render(request, 'restaurants/register.html', {'form': form})
-
 def restaurant_list(request):
     closest_restaurants = []
+    cuisine_types = ['Italian', 'Chinese', 'Mexican', 'American']  # Example cuisines
 
     if request.method == 'POST':
         user_lat = request.POST.get('lat')
         user_lng = request.POST.get('lng')
 
-        # Store the user's location in the session to prevent repeated submissions
+        # Store the user's location in the session
         request.session['user_lat'] = user_lat
         request.session['user_lng'] = user_lng
 
@@ -58,6 +58,10 @@ def restaurant_list(request):
         # Check if location is already stored in the session
         user_lat = request.session.get('user_lat')
         user_lng = request.session.get('user_lng')
+
+    sort_by_distance = request.GET.get('sort_by_distance')
+    sort_by_cuisine = request.GET.get('sort_by_cuisine')
+    sort_by_rating = request.GET.get('sort_by_rating')
 
     if user_lat and user_lng:
         try:
@@ -68,20 +72,36 @@ def restaurant_list(request):
                 type='restaurant'
             )
 
-            for place in places_result['results'][:10]:
+            for place in places_result['results']:
                 restaurant = {
                     'name': place.get('name'),
                     'rating': place.get('rating'),
                     'address': place.get('vicinity'),
-                    'cuisine': place.get('types', []),
+                    'cuisine': ', '.join(place.get('types', [])),  # Join types for easy display
                     'images': [f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo['photo_reference']}&key={settings.GOOGLE_MAPS_API_KEY}" for photo in place.get('photos', [])[:1]]
                 }
                 closest_restaurants.append(restaurant)
 
+            # Sorting by rating
+            if sort_by_rating:
+                closest_restaurants = sorted(closest_restaurants, key=lambda x: x['rating'], reverse=(sort_by_rating == 'desc'))
+
+            # Sorting by cuisine
+            if sort_by_cuisine:
+                closest_restaurants = [r for r in closest_restaurants if sort_by_cuisine.lower() in r['cuisine'].lower()]
+
+            # Sorting by distance (closest is already handled by the API)
+            if sort_by_distance == 'desc':  # Sort farthest if 'desc' is selected
+                closest_restaurants = closest_restaurants[::-1]  # Reverse the list for farthest
+
         except Exception as e:
             return render(request, 'restaurants/restaurant_list.html', {'error': str(e)})
 
-    return render(request, 'restaurants/restaurant_list.html', {'restaurants': closest_restaurants})
+    return render(request, 'restaurants/restaurant_list.html', {
+        'restaurants': closest_restaurants,
+        'cuisine_types': cuisine_types
+    })
+
 def home(request):
     favorite_restaurants = []
 
