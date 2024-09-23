@@ -19,6 +19,7 @@ urlpatterns = [
     path('logout/', custom_logout_view, name='logout'),
     path('restaurant/<str:restaurant_name>/', views.restaurant_details_view, name='restaurant_details'),
     path('profile/', views.profile_view, name='profile'),
+    path('search_restaurants/', views.search_restaurants, name='search_restaurants'),
 
 
     path('password_reset/', auth_views.PasswordResetView.as_view(), name='password_reset'),

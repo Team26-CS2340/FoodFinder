@@ -1,8 +1,3 @@
-{% extends 'base.html' %}
-
-{% block title %}Restaurant Details{% endblock %}
-
-{% block content %}
 <div class="container mt-5">
     {% if restaurant %}
         <h2 class="text-center">{{ restaurant.name }}</h2>
@@ -20,6 +15,10 @@
         <p><strong>Business Status:</strong> {{ restaurant.business_status }}</p>
         <p><a href="{{ restaurant.website }}" target="_blank">Visit Website</a></p>
 
+        <!-- Google Maps -->
+        <h3>Location</h3>
+        <div id="map" style="height: 400px; width: 100%;"></div>
+
         <h3>Photos</h3>
         <div class="row">
             {% for photo in photos %}
@@ -33,4 +32,18 @@
         <p>Restaurant details not available.</p>
     {% endif %}
 </div>
-{% endblock %}
+
+<script>
+    function initMap() {
+        var location = { lat: {{ restaurant.geometry.location.lat }}, lng: {{ restaurant.geometry.location.lng }} };
+        var map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 15,
+            center: location
+        });
+        var marker = new google.maps.Marker({
+            position: location,
+            map: map
+        });
+    }
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCqc613-d11926rxvX6oXwU2wYp3baIuP8&callback=initMap"></script>

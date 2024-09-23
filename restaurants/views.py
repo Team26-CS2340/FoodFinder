@@ -9,6 +9,8 @@ from django.http import JsonResponse
 import googlemaps
 import requests
 from .models import UserProfile
+import json
+
 
 
 
@@ -163,7 +165,7 @@ def get_restaurant_details(restaurant_name):
     # Step 3: Fetch details using the place_id
     details_params = {
         'place_id': place_id,
-        'fields': 'name,formatted_address,rating,formatted_phone_number,opening_hours,website,photos,price_level,reviews,business_status,url,types,user_ratings_total',
+        'fields': 'name,formatted_address,rating,formatted_phone_number,opening_hours,website,photos,price_level,reviews,business_status,url,types,user_ratings_total,geometry',
         'key': settings.GOOGLE_MAPS_API_KEY
     }
 
@@ -200,7 +202,6 @@ def restaurant_details_view(request, restaurant_name):
     }
     return render(request, 'restaurants/restaurantdetails.html', context)
 
-
 def get_restaurants_by_cuisine(cuisine, location="33.7490,-84.3880", radius=5000):
     """
     This function searches for restaurants that serve the given cuisine.
@@ -225,6 +226,18 @@ def get_restaurants_by_cuisine(cuisine, location="33.7490,-84.3880", radius=5000
         return None, f"Error: {data.get('status')}"
 
     restaurants = data.get('results', [])
+
+    # Add photo URLs to the restaurant data
+    for restaurant in restaurants:
+        if 'photos' in restaurant:
+            # Extract photo reference and construct the photo URL
+            photo_reference = restaurant['photos'][0]['photo_reference']
+            photo_url = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo_reference}&key={settings.GOOGLE_MAPS_API_KEY}"
+            restaurant['photo_url'] = photo_url
+        else:
+            # If no photo is available, set a default image URL
+            restaurant['photo_url'] = '/static/img/default_restaurant.jpg'
+
     # Limit the results to 10 restaurants
     return restaurants[:10], None
 
@@ -319,3 +332,61 @@ def profile_view(request):
         'profile_form': profile_form
     })
 
+def map_view(request):
+    # Default to some location, for example, Atlanta
+    default_location = {
+        'lat': 33.7490,
+        'lng': -84.3880,
+    }
+
+    context = {
+        'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
+        'default_location': default_location,
+    }
+
+    return render(request, 'restaurants/map.html', context)
+
+def search_restaurants(request):
+    if request.method == 'POST':
+        # Parse the request body to get search parameters
+        data = json.loads(request.body)
+        restaurant_name = data.get('restaurant_name', '')
+        cuisine_type = data.get('cuisine_type', '')
+
+        # Get user's location from session or use a default location (Atlanta)
+        user_lat = request.session.get('user_lat', '33.7490')
+        user_lng = request.session.get('user_lng', '-84.3880')
+
+        # Initialize Google Maps client
+        gmaps = googlemaps.Client(key=settings.GOOGLE_MAPS_API_KEY)
+
+        # Build the query string based on user input
+        query = f"{cuisine_type} {restaurant_name} restaurants" if cuisine_type or restaurant_name else 'restaurants'
+
+        # Search for nearby places using Google Places API
+        try:
+            places_result = gmaps.places_nearby(
+                location=(user_lat, user_lng),
+                radius=5000,  # 5 km radius
+                keyword=query,
+                type='restaurant'
+            )
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+        # Extract the relevant restaurant data
+        restaurants = []
+        for place in places_result['results']:
+            restaurants.append({
+                'name': place['name'],
+                'lat': place['geometry']['location']['lat'],
+                'lng': place['geometry']['location']['lng'],
+                'address': place.get('vicinity', 'No address available'),
+                'rating': place.get('rating', 'No rating available')
+            })
+
+        # Return the list of restaurants as JSON
+        return JsonResponse({'restaurants': restaurants})
+
+    # If not a POST request, return an error response
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
