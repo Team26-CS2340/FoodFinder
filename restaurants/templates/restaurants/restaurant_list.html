@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 
 {% block title %}Restaurant List{% endblock %}
-
 {% block content %}
 <div class="container mt-5">
     <div class="row">
@@ -33,22 +32,24 @@
             <div class="row justify-content-center" id="restaurant-list">
                 {% if restaurants %}
                     {% for restaurant in restaurants %}
-                        <div class="col-md-4 mb-4">
-                            <div class="card h-100">
-                                {% if restaurant.images %}
-                                    <img src="{{ restaurant.images.0 }}" alt="Restaurant Image" class="card-img-top fixed-image restaurant-image">
-                                {% endif %}
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ restaurant.name }}</h5>
-                                    <p class="card-text"><strong>Cuisine:</strong> {{ restaurant.cuisine }}</p>
-                                    <p class="card-text"><strong>Rating:</strong> {{ restaurant.rating }} / 5</p>
-                                    <p class="card-text"><strong>Address:</strong> {{ restaurant.address }}</p>
-                                    <div class="btn-group">
-                                        <a href="{% url 'restaurant_details' restaurant.name %}" class="btn btn-sm btn-outline-secondary">View</a>
-                                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            {% if restaurant.images %}
+                                <img src="{{ restaurant.images.0 }}" alt="Restaurant Image" class="card-img-top restaurant-image fixed-image restaurant-image">
+                            {% endif %}
+
+                            <div class="card-body">
+                                <h5 class="card-title">{{ restaurant.name }}</h5>
+                                <p class="card-text"><strong>Cuisine:</strong> {{ restaurant.cuisine }}</p>
+                                <p class="card-text"><strong>Rating:</strong> {{ restaurant.rating }} / 5</p>
+                                <p class="card-text"><strong>Address:</strong> {{ restaurant.address }}</p>
+                                <div class="btn-group">
+                                    <a href="{% url 'restaurant_details' restaurant.name %}" class="btn btn-sm btn-outline-secondary">View</a>
                                 </div>
                             </div>
                         </div>
+                    </div>
+            
                     {% endfor %}
                 {% else %}
                     <p>No restaurants found. Enable geolocation to view nearby restaurants.</p>

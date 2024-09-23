@@ -12,3 +12,8 @@
     object-position: center; /* Centers the image within the container */
     display: block; /* Ensures no extra spaces */
 }
+.restaurant-image {
+    width: 100% !important;
+    height: 200px !important;
+    object-fit: cover !important;
+}
