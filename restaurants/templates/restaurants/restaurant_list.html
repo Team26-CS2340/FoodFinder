@@ -21,15 +21,6 @@
                     <input type="range" id="sort-rating" name="rating" min="0" max="5" step="0.1" value="{{ request.GET.rating|default:3 }}" class="form-range">
                     <span id="rating-value">{{ request.GET.rating|default:3 }} / 5</span>
                 </div>
-
-                <!-- Optional: Sorting order, you can keep it or remove it -->
-                <!-- <div class="form-group mb-3">
-                    <label for="sort-order">Sort Order</label>
-                    <select id="sort-order" name="sort_order" class="form-control">
-                        <option value="asc" {% if request.GET.sort_order == 'asc' %}selected{% endif %}>Closest First</option>
-                        <option value="desc" {% if request.GET.sort_order == 'desc' %}selected{% endif %}>Farthest First</option>
-                    </select>
-                </div> -->
             </form>
         </div>
 
@@ -51,23 +42,25 @@
                                 <p class="card-text"><strong>Address:</strong> {{ restaurant.address }}</p>
                                 <div class="btn-group">
                                     <a href="{% url 'restaurant_details' restaurant.name %}" class="btn btn-sm btn-outline-secondary">View</a>
+                                    <!-- Like/Unlike button -->
+                                    {% if request.user.is_authenticated %}
+                                        <a href="{% url 'like_restaurant' restaurant.name restaurant.address %}" class="btn btn-sm btn-outline-primary">
+                                            {% if restaurant.name in user_favorites %}
+                                                Unlike
+                                            {% else %}
+                                                Like
+                                            {% endif %}
+                                        </a>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
                     </div>
-
                     {% endfor %}
                 {% else %}
                     <p>No restaurants found. Enable geolocation to view nearby restaurants.</p>
                 {% endif %}
             </div>
-
-            <!-- Option to load more restaurants -->
-            {% if restaurants.has_next %}
-                <div class="text-center mt-4">
-                    <a href="?page={{ restaurants.next_page_number }}" class="btn btn-outline-primary">Load More</a>
-                </div>
-            {% endif %}
         </div>
     </div>
 </div>

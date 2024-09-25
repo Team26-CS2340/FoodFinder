@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}My Favorite Restaurants{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h2>My Favorite Restaurants</h2>
+    <div class="row">
+        {% if favorites %}
+            {% for favorite in favorites %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ favorite.restaurant_name }}</h5>
+                            <p class="card-text">{{ favorite.restaurant_address }}</p>
+                            <a href="{% url 'restaurant_details' favorite.restaurant_name %}" class="btn btn-outline-secondary">View</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>You have no favorite restaurants yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -2,7 +2,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from .forms import UserRegistrationForm, UserForm, UserProfileForm
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import AuthenticationForm
 from django.conf import settings
 from django.http import JsonResponse
@@ -11,7 +11,8 @@ import requests
 from .models import UserProfile
 import json
 from geopy.distance import geodesic
-
+from django.contrib.auth.decorators import login_required
+from .models import FavoriteRestaurant
 
 
 
@@ -50,6 +51,10 @@ def signup_view(request):
 def restaurant_list(request):
     closest_restaurants = []
     cuisine_types = ['Italian', 'Chinese', 'Mexican', 'American']  # Example cuisines
+    user_favorites = []
+
+    if request.user.is_authenticated:
+        user_favorites = FavoriteRestaurant.objects.filter(user=request.user).values_list('restaurant_name', flat=True)
 
     if request.method == 'POST':
         user_lat = request.POST.get('lat')
@@ -89,7 +94,8 @@ def restaurant_list(request):
                         'cuisine': ', '.join(place.get('types', [])),  # Join types for easy display
                         'images': [
                             f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo['photo_reference']}&key={settings.GOOGLE_MAPS_API_KEY}"
-                            for photo in place.get('photos', [])[:1]],
+                            for photo in place.get('photos', [])[:1]
+                        ],
                         'location': place['geometry']['location']  # Add location for distance calculation
                     }
 
@@ -112,7 +118,8 @@ def restaurant_list(request):
 
     return render(request, 'restaurants/restaurant_list.html', {
         'restaurants': closest_restaurants,
-        'cuisine_types': cuisine_types
+        'cuisine_types': cuisine_types,
+        'user_favorites': user_favorites
     })
 
 
@@ -403,3 +410,22 @@ def search_restaurants(request):
 
     # If not a POST request, return an error response
     return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+@login_required
+def like_restaurant(request, restaurant_name, restaurant_address):
+    # Check if the restaurant is already in the favorites list
+    favorite = FavoriteRestaurant.objects.filter(user=request.user, restaurant_name=restaurant_name).first()
+
+    if favorite:
+        # If it already exists, unlike (remove from favorites)
+        favorite.delete()
+    else:
+        # If it doesn't exist, add to favorites
+        FavoriteRestaurant.objects.create(user=request.user, restaurant_name=restaurant_name, restaurant_address=restaurant_address)
+
+    return redirect('restaurant_list')
+
+@login_required
+def favorites_list(request):
+    favorites = FavoriteRestaurant.objects.filter(user=request.user)
+    return render(request, 'restaurants/favorites.html', {'favorites': favorites})

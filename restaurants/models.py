@@ -10,3 +10,11 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.username
+
+class FavoriteRestaurant(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    restaurant_name = models.CharField(max_length=255)
+    restaurant_address = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.user.username} likes {self.restaurant_name}"
