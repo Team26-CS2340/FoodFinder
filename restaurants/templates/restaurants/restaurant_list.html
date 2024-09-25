@@ -59,6 +59,7 @@
                     {% endfor %}
                 {% else %}
                     <p>No restaurants found. Enable geolocation to view nearby restaurants.</p>
+                    <button id="reload-location" class="btn btn-primary mt-3">Reload Location</button>
                 {% endif %}
             </div>
         </div>
@@ -101,6 +102,20 @@
         } else {
             console.log("Location found in sessionStorage:", lat, lng);
             sendLocationToServer({ coords: { latitude: lat, longitude: lng } });
+        }
+
+        const reloadButton = document.getElementById('reload-location');
+        if (reloadButton) {
+            reloadButton.addEventListener('click', function() {
+                // Clear session storage to force location reload
+                sessionStorage.removeItem('lat');
+                sessionStorage.removeItem('lng');
+                sessionStorage.removeItem('locationSent');
+                sessionStorage.removeItem('locationAllowed');
+
+                // Fetch the current location again and submit it to the server
+                getLocationAndSend();
+            });
         }
     });
 
