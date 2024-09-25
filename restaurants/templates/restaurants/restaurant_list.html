@@ -8,22 +8,28 @@
         <div class="col-md-3">
             <h5>Sort By</h5>
             <form id="sort-form" method="GET" action="{% url 'restaurant_list' %}">
+                <!-- Distance Slider -->
                 <div class="form-group mb-3">
-                    <label for="sort-distance">Distance</label>
-                    <select id="sort-distance" name="sort_by_distance" class="form-control">
-                        <option value="">Select</option>
-                        <option value="asc" {% if request.GET.sort_by_distance == 'asc' %}selected{% endif %}>Closest</option>
-                        <option value="desc" {% if request.GET.sort_by_distance == 'desc' %}selected{% endif %}>Farthest</option>
-                    </select>
+                    <label for="sort-distance">Distance (in km)</label>
+                    <input type="range" id="sort-distance" name="distance" min="0" max="50" value="{{ request.GET.distance|default:25 }}" class="form-range">
+                    <span id="distance-value">{{ request.GET.distance|default:25 }} km</span>
                 </div>
+
+                <!-- Rating Slider -->
                 <div class="form-group mb-3">
-                    <label for="sort-rating">Rating</label>
-                    <select id="sort-rating" name="sort_by_rating" class="form-control">
-                        <option value="">Select</option>
-                        <option value="asc" {% if request.GET.sort_by_rating == 'asc' %}selected{% endif %}>Lowest</option>
-                        <option value="desc" {% if request.GET.sort_by_rating == 'desc' %}selected{% endif %}>Highest</option>
-                    </select>
+                    <label for="sort-rating">Minimum Rating</label>
+                    <input type="range" id="sort-rating" name="rating" min="0" max="5" step="0.1" value="{{ request.GET.rating|default:3 }}" class="form-range">
+                    <span id="rating-value">{{ request.GET.rating|default:3 }} / 5</span>
                 </div>
+
+                <!-- Optional: Sorting order, you can keep it or remove it -->
+                <!-- <div class="form-group mb-3">
+                    <label for="sort-order">Sort Order</label>
+                    <select id="sort-order" name="sort_order" class="form-control">
+                        <option value="asc" {% if request.GET.sort_order == 'asc' %}selected{% endif %}>Closest First</option>
+                        <option value="desc" {% if request.GET.sort_order == 'desc' %}selected{% endif %}>Farthest First</option>
+                    </select>
+                </div> -->
             </form>
         </div>
 
@@ -55,19 +61,40 @@
                     <p>No restaurants found. Enable geolocation to view nearby restaurants.</p>
                 {% endif %}
             </div>
+
+            <!-- Option to load more restaurants -->
+            {% if restaurants.has_next %}
+                <div class="text-center mt-4">
+                    <a href="?page={{ restaurants.next_page_number }}" class="btn btn-outline-primary">Load More</a>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
 
 <script>
-    // Auto-submit form when an option is selected
+    // Auto-submit form when sliders are changed
     document.addEventListener("DOMContentLoaded", function() {
         const sortForm = document.getElementById('sort-form');
-        const sortFields = document.querySelectorAll('#sort-distance, #sort-cuisine, #sort-rating');
+        const distanceSlider = document.getElementById('sort-distance');
+        const ratingSlider = document.getElementById('sort-rating');
+        const distanceValue = document.getElementById('distance-value');
+        const ratingValue = document.getElementById('rating-value');
 
-        sortFields.forEach(field => {
+        // Update distance display when slider is adjusted
+        distanceSlider.addEventListener('input', function() {
+            distanceValue.textContent = distanceSlider.value + " km";
+        });
+
+        // Update rating display when slider is adjusted
+        ratingSlider.addEventListener('input', function() {
+            ratingValue.textContent = ratingSlider.value + " / 5";
+        });
+
+        // Automatically submit the form when sliders are changed
+        [distanceSlider, ratingSlider].forEach(field => {
             field.addEventListener('change', function() {
-                sortForm.submit();  // Automatically submit the form when a sort option is selected
+                sortForm.submit();  // Automatically submit the form when a slider option is changed
             });
         });
 

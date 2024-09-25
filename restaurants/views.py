@@ -10,6 +10,7 @@ import googlemaps
 import requests
 from .models import UserProfile
 import json
+from geopy.distance import geodesic
 
 
 
@@ -44,6 +45,8 @@ def signup_view(request):
         form = UserRegistrationForm()
 
     return render(request, 'restaurants/register.html', {'form': form})
+
+
 def restaurant_list(request):
     closest_restaurants = []
     cuisine_types = ['Italian', 'Chinese', 'Mexican', 'American']  # Example cuisines
@@ -61,40 +64,48 @@ def restaurant_list(request):
         user_lat = request.session.get('user_lat')
         user_lng = request.session.get('user_lng')
 
-    sort_by_distance = request.GET.get('sort_by_distance')
-    sort_by_cuisine = request.GET.get('sort_by_cuisine')
-    sort_by_rating = request.GET.get('sort_by_rating')
+    # Get the values from sliders
+    max_distance = request.GET.get('distance', 25)  # Default to 25km if not set
+    min_rating = request.GET.get('rating', 0)  # Default to 0 rating if not set
+    sort_order = request.GET.get('sort_order', 'asc')  # Ascending by default, but allow descending if needed
 
     if user_lat and user_lng:
         try:
             gmaps = googlemaps.Client(key=settings.GOOGLE_MAPS_API_KEY)
+            # Use radius instead of rank_by for more control over distance filtering
             places_result = gmaps.places_nearby(
                 location=(float(user_lat), float(user_lng)),
-                rank_by='distance',
+                radius=int(float(max_distance) * 1000),  # Convert km to meters
                 type='restaurant'
             )
 
             for place in places_result['results']:
-                restaurant = {
-                    'name': place.get('name'),
-                    'rating': place.get('rating'),
-                    'address': place.get('vicinity'),
-                    'cuisine': ', '.join(place.get('types', [])),  # Join types for easy display
-                    'images': [f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo['photo_reference']}&key={settings.GOOGLE_MAPS_API_KEY}" for photo in place.get('photos', [])[:1]]
-                }
-                closest_restaurants.append(restaurant)
+                restaurant_rating = place.get('rating', 0)
+                if restaurant_rating >= float(min_rating):
+                    restaurant = {
+                        'name': place.get('name'),
+                        'rating': restaurant_rating,
+                        'address': place.get('vicinity'),
+                        'cuisine': ', '.join(place.get('types', [])),  # Join types for easy display
+                        'images': [
+                            f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo['photo_reference']}&key={settings.GOOGLE_MAPS_API_KEY}"
+                            for photo in place.get('photos', [])[:1]],
+                        'location': place['geometry']['location']  # Add location for distance calculation
+                    }
 
-            # Sorting by rating
-            if sort_by_rating:
-                closest_restaurants = sorted(closest_restaurants, key=lambda x: x['rating'], reverse=(sort_by_rating == 'desc'))
+                    # Calculate the distance between user and restaurant
+                    restaurant_coords = (restaurant['location']['lat'], restaurant['location']['lng'])
+                    user_coords = (float(user_lat), float(user_lng))
+                    restaurant['distance'] = geodesic(user_coords, restaurant_coords).km  # Distance in km
 
-            # Sorting by cuisine
-            if sort_by_cuisine:
-                closest_restaurants = [r for r in closest_restaurants if sort_by_cuisine.lower() in r['cuisine'].lower()]
+                    closest_restaurants.append(restaurant)
 
-            # Sorting by distance (closest is already handled by the API)
-            if sort_by_distance == 'desc':  # Sort farthest if 'desc' is selected
-                closest_restaurants = closest_restaurants[::-1]  # Reverse the list for farthest
+            # If sort_order is descending, reverse the list (farthest first)
+            if sort_order == 'desc':
+                closest_restaurants = sorted(closest_restaurants, key=lambda x: x['distance'], reverse=True)
+            else:
+                # Keep the API's sorting by distance (closest first)
+                closest_restaurants = sorted(closest_restaurants, key=lambda x: x['distance'])
 
         except Exception as e:
             return render(request, 'restaurants/restaurant_list.html', {'error': str(e)})
@@ -103,6 +114,7 @@ def restaurant_list(request):
         'restaurants': closest_restaurants,
         'cuisine_types': cuisine_types
     })
+
 
 def home(request):
     favorite_restaurants = []
@@ -138,7 +150,6 @@ def home(request):
 PLACES_API_URL = "https://maps.googleapis.com/maps/api/place/findplacefromtext/json"
 DETAILS_API_URL = "https://maps.googleapis.com/maps/api/place/details/json"
 TEXT_SEARCH_API_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json"
-
 
 def get_restaurant_details(restaurant_name):
     if not restaurant_name:
@@ -177,15 +188,17 @@ def get_restaurant_details(restaurant_name):
 
     restaurant = details_data['result']
 
-    # Extract multiple photo URLs (up to 5 for example)
+    # Extract multiple photo URLs (up to 5) with higher resolution
     photos = []
     if restaurant.get('photos'):
         for photo in restaurant['photos'][:5]:  # Limit to 5 photos
             photo_reference = photo['photo_reference']
-            photo_url = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo_reference}&key={settings.GOOGLE_MAPS_API_KEY}"
+            # Increase maxwidth for better image quality (max is 1600)
+            photo_url = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=1600&photoreference={photo_reference}&key={settings.GOOGLE_MAPS_API_KEY}"
             photos.append(photo_url)
 
     return restaurant, photos, None
+
 
 
 def restaurant_details_view(request, restaurant_name):

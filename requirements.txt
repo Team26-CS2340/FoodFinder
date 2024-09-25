@@ -278,3 +278,4 @@ weasel==0.3.2
 Werkzeug==3.0.0
 wrapt==1.14.1
 zipp==3.17.0
+geopy
