@@ -94,25 +94,30 @@
         // Automatically submit the form when sliders are changed
         [distanceSlider, ratingSlider].forEach(field => {
             field.addEventListener('change', function() {
-                sortForm.submit();  // Automatically submit the form when a slider option is changed
+                sortForm.submit();
             });
         });
 
-        // Geolocation and submission (existing logic)
-        if (!sessionStorage.getItem('locationAllowed')) {
-            getLocationAndSend();
+        // Check if location was already stored in sessionStorage
+        const lat = sessionStorage.getItem('lat');
+        const lng = sessionStorage.getItem('lng');
+
+        if (!lat || !lng) {
+            console.log("Location not found in sessionStorage. Fetching location...");
+            getLocationAndSend();  // Fetch the location if not stored
         } else {
-            const lat = sessionStorage.getItem('lat');
-            const lng = sessionStorage.getItem('lng');
-            if (lat && lng) {
-                sendLocationToServer({coords: {latitude: lat, longitude: lng}});
-            }
+            console.log("Location found in sessionStorage:", lat, lng);
+            sendLocationToServer({ coords: { latitude: lat, longitude: lng } });
         }
     });
 
     function getLocationAndSend() {
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(sendLocationToServer, handleError);
+            navigator.geolocation.getCurrentPosition(sendLocationToServer, handleError, {
+                enableHighAccuracy: true,
+                timeout: 10000,  // Timeout after 10 seconds
+                maximumAge: 60000  // Cache for 60 seconds
+            });
         } else {
             alert("Geolocation is not supported by this browser.");
         }
@@ -121,9 +126,14 @@
     function sendLocationToServer(position) {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        sessionStorage.setItem('locationAllowed', true);
+
+        console.log("Location fetched:", lat, lng);
+
+        // Store location in sessionStorage
         sessionStorage.setItem('lat', lat);
         sessionStorage.setItem('lng', lng);
+        sessionStorage.setItem('locationAllowed', true);
+
         if (!sessionStorage.getItem('locationSent')) {
             const form = document.createElement('form');
             form.method = 'POST';
@@ -148,14 +158,20 @@
             form.appendChild(lngInput);
 
             sessionStorage.setItem('locationSent', true);
+            console.log("Submitting location to server:", lat, lng);
             document.body.appendChild(form);
             form.submit();
         }
     }
 
     function handleError(error) {
+        console.error("Error getting location:", error.message);
         alert("Error getting location: " + error.message);
+
+        // Optionally, retry getting the location
+        setTimeout(getLocationAndSend, 5000);  // Retry after 5 seconds
     }
 </script>
+
 
 {% endblock %}

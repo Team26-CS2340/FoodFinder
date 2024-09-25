@@ -64,51 +64,53 @@ def restaurant_list(request):
         user_lat = request.session.get('user_lat')
         user_lng = request.session.get('user_lng')
 
-    # Get the values from sliders
+    # Ensure location is available before proceeding
+    if not user_lat or not user_lng:
+        return render(request, 'restaurants/restaurant_list.html', {'error': 'Location not provided or allowed.'})
+
+    # Get the values from sliders or use defaults
     max_distance = request.GET.get('distance', 25)  # Default to 25km if not set
     min_rating = request.GET.get('rating', 0)  # Default to 0 rating if not set
-    sort_order = request.GET.get('sort_order', 'asc')  # Ascending by default, but allow descending if needed
+    sort_order = request.GET.get('sort_order', 'asc')  # Ascending by default
 
-    if user_lat and user_lng:
-        try:
-            gmaps = googlemaps.Client(key=settings.GOOGLE_MAPS_API_KEY)
-            # Use radius instead of rank_by for more control over distance filtering
-            places_result = gmaps.places_nearby(
-                location=(float(user_lat), float(user_lng)),
-                radius=int(float(max_distance) * 1000),  # Convert km to meters
-                type='restaurant'
-            )
+    try:
+        gmaps = googlemaps.Client(key=settings.GOOGLE_MAPS_API_KEY)
+        # Use radius instead of rank_by for more control over distance filtering
+        places_result = gmaps.places_nearby(
+            location=(float(user_lat), float(user_lng)),
+            radius=int(float(max_distance) * 1000),  # Convert km to meters
+            type='restaurant'
+        )
 
-            for place in places_result['results']:
-                restaurant_rating = place.get('rating', 0)
-                if restaurant_rating >= float(min_rating):
-                    restaurant = {
-                        'name': place.get('name'),
-                        'rating': restaurant_rating,
-                        'address': place.get('vicinity'),
-                        'cuisine': ', '.join(place.get('types', [])),  # Join types for easy display
-                        'images': [
-                            f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo['photo_reference']}&key={settings.GOOGLE_MAPS_API_KEY}"
-                            for photo in place.get('photos', [])[:1]],
-                        'location': place['geometry']['location']  # Add location for distance calculation
-                    }
+        for place in places_result['results']:
+            restaurant_rating = place.get('rating', 0)
+            if restaurant_rating >= float(min_rating):
+                restaurant = {
+                    'name': place.get('name'),
+                    'rating': restaurant_rating,
+                    'address': place.get('vicinity'),
+                    'cuisine': ', '.join(place.get('types', [])),  # Join types for easy display
+                    'images': [
+                        f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo['photo_reference']}&key={settings.GOOGLE_MAPS_API_KEY}"
+                        for photo in place.get('photos', [])[:1]],
+                    'location': place['geometry']['location']  # Add location for distance calculation
+                }
 
-                    # Calculate the distance between user and restaurant
-                    restaurant_coords = (restaurant['location']['lat'], restaurant['location']['lng'])
-                    user_coords = (float(user_lat), float(user_lng))
-                    restaurant['distance'] = geodesic(user_coords, restaurant_coords).km  # Distance in km
+                # Calculate the distance between user and restaurant
+                restaurant_coords = (restaurant['location']['lat'], restaurant['location']['lng'])
+                user_coords = (float(user_lat), float(user_lng))
+                restaurant['distance'] = geodesic(user_coords, restaurant_coords).km  # Distance in km
 
-                    closest_restaurants.append(restaurant)
+                closest_restaurants.append(restaurant)
 
-            # If sort_order is descending, reverse the list (farthest first)
-            if sort_order == 'desc':
-                closest_restaurants = sorted(closest_restaurants, key=lambda x: x['distance'], reverse=True)
-            else:
-                # Keep the API's sorting by distance (closest first)
-                closest_restaurants = sorted(closest_restaurants, key=lambda x: x['distance'])
+        # Sort by distance if requested
+        if sort_order == 'desc':
+            closest_restaurants = sorted(closest_restaurants, key=lambda x: x['distance'], reverse=True)
+        else:
+            closest_restaurants = sorted(closest_restaurants, key=lambda x: x['distance'])
 
-        except Exception as e:
-            return render(request, 'restaurants/restaurant_list.html', {'error': str(e)})
+    except Exception as e:
+        return render(request, 'restaurants/restaurant_list.html', {'error': str(e)})
 
     return render(request, 'restaurants/restaurant_list.html', {
         'restaurants': closest_restaurants,
