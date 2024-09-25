@@ -27,7 +27,8 @@
     </style>
 </head>
 <body>
-
+    <br>
+    <br>
     <h2 class="text-center">Interactive Map with Restaurant Search</h2>
 
     <!-- Search bar for restaurant search -->
@@ -105,24 +106,30 @@
         }
 
         // Display place details in the info window
-        function displayPlaceDetails(placeDetails, marker) {
-            // Content for the info window
-            const contentString = `
-                <div>
-                    <h4>${placeDetails.name}</h4>
-                    <p><strong>Address:</strong> ${placeDetails.formatted_address}</p>
-                    <p><strong>Rating:</strong> ${placeDetails.rating || 'N/A'} / 5</p>
-                    <p><strong>Phone:</strong> ${placeDetails.formatted_phone_number || 'N/A'}</p>
-                    <p><strong>Website:</strong> <a href="${placeDetails.website || '#'}" target="_blank">Visit</a></p>
-                </div>
-            `;
+        // Display place details in the info window
+function displayPlaceDetails(placeDetails, marker) {
+    // Encode the restaurant name to ensure it is URL-friendly
+    const encodedRestaurantName = encodeURIComponent(placeDetails.name);
 
-            // Set the content for the info window
-            infoWindow.setContent(contentString);
+    // Content for the info window
+    const contentString = `
+        <div>
+            <h4>${placeDetails.name}</h4>
+            <p><strong>Address:</strong> ${placeDetails.formatted_address}</p>
+            <p><strong>Rating:</strong> ${placeDetails.rating || 'N/A'} / 5</p>
+            <p><strong>Phone:</strong> ${placeDetails.formatted_phone_number || 'N/A'}</p>
+            <p><strong>Website:</strong> <a href="${placeDetails.website || '#'}" target="_blank">Visit</a></p>
+            <p><a href="/restaurant/${encodedRestaurantName}">View More</a></p>
+        </div>
+    `;
 
-            // Open the info window at the marker's position
-            infoWindow.open(map, marker);
-        }
+    // Set the content for the info window
+    infoWindow.setContent(contentString);
+
+    // Open the info window at the marker's position
+    infoWindow.open(map, marker);
+}
+
     </script>
 
 </body>
