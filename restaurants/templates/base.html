@@ -61,7 +61,7 @@
             <ul class="nav justify-content-center border-bottom pb-3 mb-3">
                 <li class="nav-item"><a href="{% url 'home' %}" class="nav-link px-2 {% if request.resolver_match.url_name == 'home' %}text-warning{% else %}text-body-secondary{% endif %}">Home</a></li>
                 <li class="nav-item"><a href="{% url 'restaurant_list' %}" class="nav-link px-2 {% if request.resolver_match.url_name == 'restaurant_list' %}text-warning{% else %}text-body-secondary{% endif %}">Restaurants</a></li>
-                <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">Favorites</a></li>
+                <li class="nav-item"><a href="{% url 'favorites_list' %}" class="nav-link px-2 text-body-secondary">Favorites</a></li>
                 <li class="nav-item"><a href="#" class="nav-link px-2 text-body-secondary">About</a></li>
             </ul>
             <p class="text-center text-body-secondary">© 2024 Company, Inc</p>
