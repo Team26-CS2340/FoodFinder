@@ -51,6 +51,16 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "atlanta_food_finder.urls"
+LOGIN_REDIRECT_URL = 'home'  # or whatever page you want to redirect to after login
+LOGOUT_REDIRECT_URL = 'home'
+# settings.py
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'finddiningatl@gmail.com'
+EMAIL_HOST_PASSWORD = 'rmkedgifxmudutpw'
+DEFAULT_FROM_EMAIL = 'finddiningatl@gmail.com'
 
 TEMPLATES = [
     {
@@ -116,9 +126,18 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = "static/"
+
+DEBUG = True
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / "restaurants/static/restaurants",  # Replace 'your_app_name' with the actual name of your app
+]
+
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+GOOGLE_MAPS_API_KEY = 'AIzaSyCqc613-d11926rxvX6oXwU2wYp3baIuP8'

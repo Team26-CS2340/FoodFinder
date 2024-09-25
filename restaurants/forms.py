@@ -30,3 +30,13 @@ class UserRegistrationForm(forms.ModelForm):
                 dietary_restrictions=self.cleaned_data.get('dietary_restrictions', '')
             )
         return user
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ['favorite_cuisine', 'favorite_dish', 'dietary_restrictions']
+
+class UserForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email']

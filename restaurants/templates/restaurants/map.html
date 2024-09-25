@@ -1,0 +1,130 @@
+
+{% extends 'base.html' %}
+
+{% block title %}InteractiveMap{% endblock %}
+
+{% block content %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Load Google Maps JavaScript API with Places Library -->
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places&callback=initMap" defer></script>
+    <style>
+        #map {
+            height: 80vh;
+            width: 100%;
+        }
+        .search-container {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .search-container input {
+            width: 300px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2 class="text-center">Interactive Map with Restaurant Search</h2>
+
+    <!-- Search bar for restaurant search -->
+    <div class="search-container">
+        <input id="autocomplete" type="text" placeholder="Search for restaurants...">
+    </div>
+
+    <!-- The map container -->
+    <div id="map"></div>
+
+    <script>
+        let map;
+        let autocomplete;
+        let marker;
+        let infoWindow;
+        let service;
+
+        // Initialize and add the map
+        function initMap() {
+            const defaultLocation = {
+                lat: parseFloat('{{ default_location.lat }}'),
+                lng: parseFloat('{{ default_location.lng }}')
+            };
+
+            // Create the map centered at the default location
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 13,
+                center: defaultLocation,
+            });
+
+            // Create the autocomplete object and associate it with the search input
+            autocomplete = new google.maps.places.Autocomplete(document.getElementById('autocomplete'));
+            autocomplete.setFields(['place_id', 'geometry', 'name', 'formatted_address']);
+
+            // Listen for when a place is selected in the autocomplete search
+            autocomplete.addListener('place_changed', onPlaceChanged);
+
+            // Create a service to fetch place details
+            service = new google.maps.places.PlacesService(map);
+
+            // Create an info window (this will be reused for all restaurant markers)
+            infoWindow = new google.maps.InfoWindow();
+        }
+
+        // Handle when a place is selected from autocomplete
+        function onPlaceChanged() {
+            const place = autocomplete.getPlace();
+
+            if (!place.geometry) {
+                console.error("No geometry available for the selected place.");
+                return;
+            }
+
+            // Zoom in to the selected place
+            map.setCenter(place.geometry.location);
+            map.setZoom(15);
+
+            // Add a marker at the selected place
+            if (marker) {
+                marker.setMap(null);  // Remove the previous marker if any
+            }
+            marker = new google.maps.Marker({
+                position: place.geometry.location,
+                map: map,
+            });
+
+            // Fetch more details about the place
+            service.getDetails({ placeId: place.place_id }, (placeDetails, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    displayPlaceDetails(placeDetails, marker);
+                } else {
+                    console.error("Failed to get place details.");
+                }
+            });
+        }
+
+        // Display place details in the info window
+        function displayPlaceDetails(placeDetails, marker) {
+            // Content for the info window
+            const contentString = `
+                <div>
+                    <h4>${placeDetails.name}</h4>
+                    <p><strong>Address:</strong> ${placeDetails.formatted_address}</p>
+                    <p><strong>Rating:</strong> ${placeDetails.rating || 'N/A'} / 5</p>
+                    <p><strong>Phone:</strong> ${placeDetails.formatted_phone_number || 'N/A'}</p>
+                    <p><strong>Website:</strong> <a href="${placeDetails.website || '#'}" target="_blank">Visit</a></p>
+                </div>
+            `;
+
+            // Set the content for the info window
+            infoWindow.setContent(contentString);
+
+            // Open the info window at the marker's position
+            infoWindow.open(map, marker);
+        }
+    </script>
+
+</body>
+</html>
+{% endblock %}

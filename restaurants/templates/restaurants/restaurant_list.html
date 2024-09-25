@@ -1,25 +1,134 @@
 {% extends 'base.html' %}
 
 {% block title %}Restaurant List{% endblock %}
-
 {% block content %}
 <div class="container mt-5">
-    <h2 class="text-center">Restaurants</h2>
-    <div class="row justify-content-center">
-        {% for restaurant in restaurants %}
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">{{ restaurant.name }}</h5>
-                    <p class="card-text"><strong>Cuisine:</strong> {{ restaurant.cuisine }}</p>
-                    <p class="card-text"><strong>Rating:</strong> {{ restaurant.rating }} / 5</p>
-                    <p class="card-text"><strong>Address:</strong> {{ restaurant.address }}</p>
+    <div class="row">
+        <!-- Sidebar for sorting -->
+        <div class="col-md-3">
+            <h5>Sort By</h5>
+            <form id="sort-form" method="GET" action="{% url 'restaurant_list' %}">
+                <div class="form-group mb-3">
+                    <label for="sort-distance">Distance</label>
+                    <select id="sort-distance" name="sort_by_distance" class="form-control">
+                        <option value="">Select</option>
+                        <option value="asc" {% if request.GET.sort_by_distance == 'asc' %}selected{% endif %}>Closest</option>
+                        <option value="desc" {% if request.GET.sort_by_distance == 'desc' %}selected{% endif %}>Farthest</option>
+                    </select>
                 </div>
+                <div class="form-group mb-3">
+                    <label for="sort-rating">Rating</label>
+                    <select id="sort-rating" name="sort_by_rating" class="form-control">
+                        <option value="">Select</option>
+                        <option value="asc" {% if request.GET.sort_by_rating == 'asc' %}selected{% endif %}>Lowest</option>
+                        <option value="desc" {% if request.GET.sort_by_rating == 'desc' %}selected{% endif %}>Highest</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+
+        <!-- Restaurant list -->
+        <div class="col-md-9">
+            <div class="row justify-content-center" id="restaurant-list">
+                {% if restaurants %}
+                    {% for restaurant in restaurants %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            {% if restaurant.images %}
+                                <img src="{{ restaurant.images.0 }}" alt="Restaurant Image" class="card-img-top restaurant-image fixed-image restaurant-image">
+                            {% endif %}
+
+                            <div class="card-body">
+                                <h5 class="card-title">{{ restaurant.name }}</h5>
+                                <p class="card-text"><strong>Cuisine:</strong> {{ restaurant.cuisine }}</p>
+                                <p class="card-text"><strong>Rating:</strong> {{ restaurant.rating }} / 5</p>
+                                <p class="card-text"><strong>Address:</strong> {{ restaurant.address }}</p>
+                                <div class="btn-group">
+                                    <a href="{% url 'restaurant_details' restaurant.name %}" class="btn btn-sm btn-outline-secondary">View</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            
+                    {% endfor %}
+                {% else %}
+                    <p>No restaurants found. Enable geolocation to view nearby restaurants.</p>
+                {% endif %}
             </div>
         </div>
-        {% empty %}
-        <p>No restaurants available.</p>
-        {% endfor %}
     </div>
 </div>
+
+<script>
+    // Auto-submit form when an option is selected
+    document.addEventListener("DOMContentLoaded", function() {
+        const sortForm = document.getElementById('sort-form');
+        const sortFields = document.querySelectorAll('#sort-distance, #sort-cuisine, #sort-rating');
+
+        sortFields.forEach(field => {
+            field.addEventListener('change', function() {
+                sortForm.submit();  // Automatically submit the form when a sort option is selected
+            });
+        });
+
+        // Geolocation and submission (existing logic)
+        if (!sessionStorage.getItem('locationAllowed')) {
+            getLocationAndSend();
+        } else {
+            const lat = sessionStorage.getItem('lat');
+            const lng = sessionStorage.getItem('lng');
+            if (lat && lng) {
+                sendLocationToServer({coords: {latitude: lat, longitude: lng}});
+            }
+        }
+    });
+
+    function getLocationAndSend() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(sendLocationToServer, handleError);
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    }
+
+    function sendLocationToServer(position) {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        sessionStorage.setItem('locationAllowed', true);
+        sessionStorage.setItem('lat', lat);
+        sessionStorage.setItem('lng', lng);
+        if (!sessionStorage.getItem('locationSent')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = "{% url 'restaurant_list' %}";
+
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = 'csrfmiddlewaretoken';
+            csrfToken.value = '{{ csrf_token }}';
+            form.appendChild(csrfToken);
+
+            const latInput = document.createElement('input');
+            latInput.type = 'hidden';
+            latInput.name = 'lat';
+            latInput.value = lat;
+            form.appendChild(latInput);
+
+            const lngInput = document.createElement('input');
+            lngInput.type = 'hidden';
+            lngInput.name = 'lng';
+            lngInput.value = lng;
+            form.appendChild(lngInput);
+
+            sessionStorage.setItem('locationSent', true);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    function handleError(error) {
+        alert("Error getting location: " + error.message);
+    }
+</script>
+
 {% endblock %}
