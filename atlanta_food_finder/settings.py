@@ -64,19 +64,20 @@ DEFAULT_FROM_EMAIL = 'finddiningatl@gmail.com'
 
 TEMPLATES = [
     {
-        "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
-        "APP_DIRS": True,
-        "OPTIONS": {
-            "context_processors": [
-                "django.template.context_processors.debug",
-                "django.template.context_processors.request",
-                "django.contrib.auth.context_processors.auth",
-                "django.contrib.messages.context_processors.messages",
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,  # Make sure this is True
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
             ],
         },
     },
 ]
+
 
 WSGI_APPLICATION = "atlanta_food_finder.wsgi.application"
 

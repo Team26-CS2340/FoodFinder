@@ -44,8 +44,9 @@
                                 <p class="card-text"><strong>Rating:</strong> {{ restaurant.rating }} / 5</p>
                                 <p class="card-text"><strong>Address:</strong> {{ restaurant.address }}</p>
                                 <div class="btn-group">
-                                    <a href="{% url 'restaurant_details' restaurant.name %}" class="btn btn-sm btn-outline-secondary">View</a>
+                                    <button type="button" class="btn btn-sm btn-outline-warning" onclick="addFavorite({{ restaurant.id }})">Favorite</button>
                                 </div>
+                                
                             </div>
                         </div>
                     </div>
@@ -60,6 +61,58 @@
 </div>
 
 <script>
+    function addFavorite(restaurantId) {
+        const button = document.querySelector(`button[onclick="addFavorite(${restaurantId})"]`);
+        button.textContent = 'Adding...'; // Change text to indicate loading
+        button.disabled = true; // Disable button while processing
+
+        fetch("{% url 'add_favorite' 0 %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ id: restaurantId })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert("Restaurant added to favorites!");
+            } else {
+                alert(data.message || "Failed to add to favorites.");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("An error occurred: " + error.message);
+        })
+        .finally(() => {
+            button.textContent = 'Favorite'; // Reset button text
+            button.disabled = false; // Re-enable button
+        });
+    }
+
+
+    // Auto-submit form when an option is selected
+    document.addEventListener("DOMContentLoaded", function() {
+        const sortForm = document.getElementById('sort-form');
+        const sortFields = document.querySelectorAll('#sort-distance, #sort-rating');
+
+        sortFields.forEach(field => {
+            field.addEventListener('change', function() {
+                sortForm.submit();
+            });
+        });
+
+        // Add geolocation handling logic as before...
+    });
+
+
     // Auto-submit form when an option is selected
     document.addEventListener("DOMContentLoaded", function() {
         const sortForm = document.getElementById('sort-form');

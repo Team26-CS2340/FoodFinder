@@ -10,7 +10,36 @@ import googlemaps
 import requests
 from .models import UserProfile
 import json
+# views.py
+from django.views import View
+from django.shortcuts import get_object_or_404, redirect
+from .models import Restaurant
 
+# views.py
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from .models import UserProfile
+
+@login_required
+def favorites(request):
+    user_profile = UserProfile.objects.get(user=request.user)
+    favorite_restaurants = user_profile.favorite_restaurants.all()
+    
+    return render(request, 'restaurants/favorites.html', {'favorite_restaurants': favorite_restaurants})
+
+
+class AddFavoriteView(View):
+    @login_required
+    def post(self, request, restaurant_id):
+        restaurant = get_object_or_404(Restaurant, id=restaurant_id)
+        user_profile = UserProfile.objects.get(user=request.user)
+
+        # Add the restaurant to the user's favorites
+        if restaurant not in user_profile.favorite_restaurants.all():
+            user_profile.favorite_restaurants.add(restaurant)
+            return JsonResponse({'success': True})
+        
+        return JsonResponse({'success': False, 'message': 'Already a favorite.'})
 
 
 
@@ -152,7 +181,12 @@ def get_restaurant_details(restaurant_name):
         'key': settings.GOOGLE_MAPS_API_KEY
     }
 
-    response = requests.get(PLACES_API_URL, params=params)
+    try:
+        response = requests.get(PLACES_API_URL, params=params)
+        response.raise_for_status()  # Raise an error for bad responses
+    except requests.RequestException as e:
+        return None, f"Error occurred while searching for the restaurant: {str(e)}"
+
     data = response.json()
 
     if not data.get('candidates'):
@@ -169,7 +203,12 @@ def get_restaurant_details(restaurant_name):
         'key': settings.GOOGLE_MAPS_API_KEY
     }
 
-    details_response = requests.get(DETAILS_API_URL, params=details_params)
+    try:
+        details_response = requests.get(DETAILS_API_URL, params=details_params)
+        details_response.raise_for_status()  # Raise an error for bad responses
+    except requests.RequestException as e:
+        return None, f"Error occurred while fetching restaurant details: {str(e)}"
+
     details_data = details_response.json()
 
     if 'result' not in details_data:
@@ -185,7 +224,25 @@ def get_restaurant_details(restaurant_name):
             photo_url = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo_reference}&key={settings.GOOGLE_MAPS_API_KEY}"
             photos.append(photo_url)
 
-    return restaurant, photos, None
+    # You can extract other necessary details here if needed
+    restaurant_details = {
+        'name': restaurant.get('name'),
+        'address': restaurant.get('formatted_address'),
+        'rating': restaurant.get('rating'),
+        'phone_number': restaurant.get('formatted_phone_number'),
+        'opening_hours': restaurant.get('opening_hours'),
+        'website': restaurant.get('website'),
+        'price_level': restaurant.get('price_level'),
+        'business_status': restaurant.get('business_status'),
+        'user_ratings_total': restaurant.get('user_ratings_total'),
+        'geometry': restaurant.get('geometry'),
+        'photos': photos,
+        'reviews': restaurant.get('reviews', []),  # Default to an empty list if no reviews
+        'url': restaurant.get('url')
+    }
+
+    return restaurant_details, None
+
 
 
 def restaurant_details_view(request, restaurant_name):
@@ -390,3 +447,30 @@ def search_restaurants(request):
 
     # If not a POST request, return an error response
     return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+# views.py
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from .models import Restaurant, UserProfile
+
+@login_required
+@require_POST
+def add_favorite(request):
+    try:
+        data = json.loads(request.body)
+        restaurant_id = data.get('id')
+
+        restaurant = Restaurant.objects.get(id=restaurant_id)
+        user_profile = UserProfile.objects.get(user=request.user)
+
+        # Add restaurant to favorites if not already there
+        if restaurant not in user_profile.favorite_restaurants.all():
+            user_profile.favorite_restaurants.add(restaurant)
+            return JsonResponse({'success': True})
+
+        return JsonResponse({'success': False, 'message': 'Already a favorite.'})
+    except Restaurant.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Restaurant not found.'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)

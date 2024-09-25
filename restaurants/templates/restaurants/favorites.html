@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Favorite Restaurants{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h2>My Favorite Restaurants</h2>
+    <div class="row justify-content-center" id="restaurant-list">
+        {% if favorite_restaurants %}
+            {% for restaurant in favorite_restaurants %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    {% if restaurant.images %}
+                        <img src="{{ restaurant.images.0 }}" alt="Restaurant Image" class="card-img-top restaurant-image fixed-image restaurant-image">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ restaurant.name }}</h5>
+                        <p class="card-text"><strong>Cuisine:</strong> {{ restaurant.cuisine_type }}</p>
+                        <p class="card-text"><strong>Rating:</strong> {{ restaurant.rating }} / 5</p>
+                        <p class="card-text"><strong>Address:</strong> {{ restaurant.location }}</p>
+                        <div class="btn-group">
+                            <a href="{% url 'restaurant_details' restaurant.name %}" class="btn btn-sm btn-outline-secondary">View</a>
+                            <button class="btn btn-sm btn-outline-secondary add-favorite" data-id="{{ restaurant.id }}">Add to Favorites</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>You have no favorite restaurants yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.add-favorite').forEach(button => {
+        button.addEventListener('click', function() {
+            const restaurantId = this.getAttribute('data-id');
+            
+            fetch('{% url "add_favorite" %}', {  // Use Django's URL template tag
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'  // Make sure the CSRF token is included
+                },
+                body: JSON.stringify({ id: restaurantId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Added to favorites!');
+                    // Optionally, you could also remove the button or change its text
+                    this.textContent = 'Added to Favorites';  // Change button text
+                    this.disabled = true;  // Disable the button after adding
+                } else {
+                    alert(data.message || 'Failed to add to favorites.');  // Use the message from the response
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to add to favorites.');
+            });
+        });
+    });
+    </script>
+    
+{% endblock %}
