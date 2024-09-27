@@ -27,10 +27,9 @@
                 <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
                     <li><a href="{% url 'home' %}" class="nav-link px-2 {% if request.resolver_match.url_name == 'home' %}text-warning active{% else %}text-white{% endif %}" aria-current="{% if request.resolver_match.url_name == 'home' %}page{% endif %}">Home</a></li>
                     <li><a href="{% url 'restaurant_list' %}" class="nav-link px-2 {% if request.resolver_match.url_name == 'restaurant_list' %}text-warning active{% else %}text-white{% endif %}" aria-current="{% if request.resolver_match.url_name == 'restaurant_list' %}page{% endif %}">Restaurants</a></li>
-                    <li>
-    <a href="{% url 'favorites_list' %}" class="nav-link px-2 {% if request.resolver_match.url_name == 'favorites_list' %}text-warning active{% else %}text-white{% endif %}" aria-current="{% if request.resolver_match.url_name == 'favorites_list' %}page{% endif %}">Favorites</a>
-</li>
-
+                    {% if user.is_authenticated %}
+                        <li><a href="{% url 'favorites_list' %}" class="nav-link px-2 {% if request.resolver_match.url_name == 'favorites_list' %}text-warning active{% else %}text-white{% endif %}" aria-current="{% if request.resolver_match.url_name == 'favorites_list' %}page{% endif %}">Favorites</a></li> 
+                    {% endif %}
                     <li><a href="{% url 'map' %}" class="nav-link px-2 {% if request.resolver_match.url_name == 'map' %}text-warning active{% else %}text-white{% endif %}" aria-current="{% if request.resolver_match.url_name == 'map' %}page{% endif %}">Map</a></li>
                     <li><a href="#" class="nav-link px-2 text-white">About</a></li>
                     {% if user.is_authenticated %}
