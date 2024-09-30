@@ -8,11 +8,13 @@ from django.conf import settings
 from django.http import JsonResponse
 import googlemaps
 import requests
-from .models import UserProfile
+from .models import UserProfile, RestaurantReview
 import json
 from geopy.distance import geodesic
 from django.contrib.auth.decorators import login_required
 from .models import FavoriteRestaurant
+from .forms import ReviewForm
+
 
 
 
@@ -222,6 +224,7 @@ def restaurant_details_view(request, restaurant_name):
         'photos': photos
     }
     return render(request, 'restaurants/restaurantdetails.html', context)
+
 
 def get_restaurants_by_cuisine(cuisine, location="33.7490,-84.3880", radius=5000):
     """

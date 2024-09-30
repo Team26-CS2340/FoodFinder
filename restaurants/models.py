@@ -18,3 +18,18 @@ class FavoriteRestaurant(models.Model):
 
     def __str__(self):
         return f"{self.user.username} likes {self.restaurant_name}"
+
+class RestaurantReview(models.Model):
+    place_id = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
+    formatted_address = models.CharField(max_length=500)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
+    rating = models.PositiveSmallIntegerField()  # 1 to 5
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']  # Newest reviews first
+
+    def __str__(self):
+        return f"Review by {self.user.username} for {self.name}"

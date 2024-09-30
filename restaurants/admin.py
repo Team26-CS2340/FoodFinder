@@ -30,6 +30,11 @@ class UserAdmin(BaseUserAdmin):
         return instance.userprofile.favorite_cuisine
     get_favorite_cuisine.short_description = 'Favorite Cuisine'
 
+class RestaurantReviewAdmin(admin.ModelAdmin):
+    list_display = ('restaurant_name', 'user', 'rating', 'created_at')
+    list_filter = ('rating', 'created_at', 'user')
+    search_fields = ('restaurant_name', 'user__username', 'comment')
+
 # Unregister the default User admin and register the customized one
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
