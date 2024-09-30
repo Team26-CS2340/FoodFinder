@@ -17,8 +17,8 @@
                             <p class="card-text"><strong>Rating:</strong> {{ restaurant.rating }} / 5</p>
                             <p class="card-text"><strong>Address:</strong> {{ restaurant.address }}</p>
                             <div class="btn-group">
-                                <a href="{{ restaurant.url }}" class="btn btn-sm btn-outline-secondary" target="_blank">
-                                    View on Google Maps
+                                <a href="{% url 'restaurant_details' restaurant.name %}" class="btn btn-sm btn-outline-secondary" target="_blank">
+                                    View
                                 </a>
                                 <a href="{% url 'like_restaurant' restaurant.name restaurant.address %}"
                                    class="btn btn-sm btn-outline-primary">
