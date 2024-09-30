@@ -22,6 +22,8 @@ urlpatterns = [
     path('search_restaurants/', views.search_restaurants, name='search_restaurants'),
     path('favorites/', views.favorites_list, name='favorites_list'),
     path('like/<path:restaurant_name>/<path:restaurant_address>/', views.like_restaurant, name='like_restaurant'),  # Ensure this is defined
+    path('get-cuisine/<str:restaurant_name>/', views.get_cuisine, name='get_cuisine'),
+    path('about/', views.about, name='about'),
 
 
     path('password_reset/', auth_views.PasswordResetView.as_view(), name='password_reset'),

@@ -446,3 +446,32 @@ def favorites_list(request):
             })
 
     return render(request, 'restaurants/favorites.html', {'restaurant_details_list': restaurant_details_list})
+
+
+def get_cuisine(request, restaurant_name):
+    API_KEY = 'Z1-cBLAvmhrsFcIlUXksdT5lgUKBaZSvZFSckSC3AO7REMeFVSBAgFcRxMDF0PCIccyxAh4mjVO1TcZ9UdjgX7wYOGpEPiaNoXzfCEQVdXICSBZTXA5Aql9WJhv7ZnYx'  # Your Yelp API key
+    headers = {
+        'Authorization': f'Bearer {API_KEY}'
+    }
+    latitude = 33.7490  # Example latitude (Atlanta)
+    longitude = -84.3880  # Example longitude (Atlanta)
+    params = {
+        'term': restaurant_name,
+        'latitude': latitude,
+        'longitude': longitude,
+        'limit': 1  # Get only one result for simplicity
+    }
+    response = requests.get('https://api.yelp.com/v3/businesses/search', headers=headers, params=params)
+
+    if response.status_code == 200:
+        data = response.json()
+        if 'businesses' in data and len(data['businesses']) > 0:
+            business = data['businesses'][0]
+            if business['categories']:
+                first_cuisine = business['categories'][0]['title']
+                return JsonResponse({'cuisine': first_cuisine})
+
+    return JsonResponse({'cuisine': 'Not available'}, status=404)
+
+def about(request):
+    return render(request, "restaurants/about.html")

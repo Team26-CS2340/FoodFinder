@@ -82,6 +82,7 @@
         <div class="text-center mb-5">
             <p class="lead"><strong>Address:</strong> {{ restaurant.formatted_address }}</p>
             <p class="lead"><strong>Phone:</strong> {{ restaurant.formatted_phone_number }}</p>
+            <p class="lead"><strong>Cuisine:</strong> <span id="cuisine">Loading...</span></p> <!-- Cuisine field -->
         </div>
 
         <!-- Restaurant Additional Info -->
@@ -117,65 +118,32 @@
             </div>
         </div>
 
-        <!-- **New Section: Reviews** -->
-        <div class="mt-5">
-            <h3>Reviews</h3>
-            {% if reviews %}
-                {% for review in reviews %}
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Rating: {{ review.rating }} / 5</h5>
-                            <h6 class="card-subtitle mb-2 text-muted">By {{ review.user.username }} on {{ review.created_at|date:"F j, Y, g:i a" }}</h6>
-                            <p class="card-text">{{ review.comment }}</p>
-                        </div>
-                    </div>
-                {% endfor %}
-            {% else %}
-                <p>No reviews yet. Be the first to review this restaurant!</p>
-            {% endif %}
-        </div>
-
-        <!-- **New Section: Add Review Form** -->
-        <div class="mt-4">
-            <h4>Write a Review</h4>
-            {% if user.is_authenticated %}
-                {% if user_review %}
-                    <div class="alert alert-info">
-                        You have already reviewed this restaurant.
-                    </div>
-                {% else %}
-                    <form method="POST" action="{% url 'restaurant_details' restaurant.name %}">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="id_rating" class="form-label">Rating</label>
-                            {{ form.rating }}
-                            {% if form.rating.errors %}
-                                <div class="text-danger">
-                                    {{ form.rating.errors }}
-                                </div>
-                            {% endif %}
-                        </div>
-                        <div class="mb-3">
-                            <label for="id_comment" class="form-label">Your Review</label>
-                            {{ form.comment }}
-                            {% if form.comment.errors %}
-                                <div class="text-danger">
-                                    {{ form.comment.errors }}
-                                </div>
-                            {% endif %}
-                        </div>
-                        <button type="submit" class="btn btn-primary">Submit Review</button>
-                    </form>
-                {% endif %}
-            {% else %}
-                <p>Please <a href="{% url 'login' %}">login</a> to write a review.</p>
-            {% endif %}
-        </div>
-
     {% else %}
         <p class="text-center">Restaurant details not available.</p>
     {% endif %}
 </div>
+
+<!-- JavaScript to Fetch Cuisine -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const restaurantName = "{{ restaurant.name }}";
+        const cuisineElement = document.getElementById('cuisine');
+
+        fetch(`/get-cuisine/${restaurantName}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.cuisine) {
+                    cuisineElement.textContent = data.cuisine;
+                } else {
+                    cuisineElement.textContent = 'Cuisine not available';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching cuisine:', error);
+                cuisineElement.textContent = 'Cuisine not available';
+            });
+    });
+</script>
 
 <!-- Google Maps Integration -->
 <script>
