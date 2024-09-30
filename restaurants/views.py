@@ -428,54 +428,21 @@ def like_restaurant(request, restaurant_name, restaurant_address):
 
 @login_required
 def favorites_list(request):
-    user_lat = request.session.get('user_lat')
-    user_lng = request.session.get('user_lng')
+    favorites = FavoriteRestaurant.objects.filter(user=request.user)
 
-    # Ensure location is available
-    if not user_lat or not user_lng:
-        return render(request, 'restaurants/favorites.html', {'error': 'Location not provided or allowed.'})
+    # Prepare a list to hold restaurant details
+    restaurant_details_list = []
 
-    # Fetch favorite restaurant names
-    favorite_restaurant_names = FavoriteRestaurant.objects.filter(user=request.user).values_list('restaurant_name', flat=True)
+    for favorite in favorites:
+        restaurant, photos, error = get_restaurant_details(favorite.restaurant_name)
+        if restaurant and not error:
+            # Append the restaurant details along with the photos
+            restaurant_details_list.append({
+                'name': restaurant.get('name'),
+                'address': restaurant.get('formatted_address'),
+                'rating': restaurant.get('rating'),
+                'image': photos[0] if photos else None,  # Take the first photo if available
+                'url': restaurant.get('url')
+            })
 
-    # Initialize Google Maps client
-    gmaps = googlemaps.Client(key=settings.GOOGLE_MAPS_API_KEY)
-    favorite_restaurants = []
-
-    try:
-        # Loop through each favorite restaurant name and fetch its details
-        for restaurant_name in favorite_restaurant_names:
-            places_result = gmaps.places(
-                query=restaurant_name,
-                location=(float(user_lat), float(user_lng)),
-                radius=50000,  # Adjust radius if necessary
-                type='restaurant'
-            )
-
-            if places_result['results']:
-                place = places_result['results'][0]  # Take the first result
-                restaurant = {
-                    'name': place.get('name'),
-                    'rating': place.get('rating', 0),
-                    'address': place.get('vicinity'),
-                    'cuisine': ', '.join(place.get('types', [])),  # Example, join types
-                    'images': [
-                        f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo['photo_reference']}&key={settings.GOOGLE_MAPS_API_KEY}"
-                        for photo in place.get('photos', [])[:1]
-                    ],
-                    'location': place['geometry']['location']
-                }
-
-                # Calculate distance
-                restaurant_coords = (restaurant['location']['lat'], restaurant['location']['lng'])
-                user_coords = (float(user_lat), float(user_lng))
-                restaurant['distance'] = geodesic(user_coords, restaurant_coords).km
-
-                favorite_restaurants.append(restaurant)
-
-    except Exception as e:
-        return render(request, 'restaurants/favorites.html', {'error': str(e)})
-
-    return render(request, 'restaurants/favorites.html', {
-        'restaurants': favorite_restaurants,
-    })
+    return render(request, 'restaurants/favorites.html', {'restaurant_details_list': restaurant_details_list})
