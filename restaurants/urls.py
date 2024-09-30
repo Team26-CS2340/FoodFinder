@@ -21,7 +21,7 @@ urlpatterns = [
     path('profile/', views.profile_view, name='profile'),
     path('search_restaurants/', views.search_restaurants, name='search_restaurants'),
     path('about/', views.about, name='about'),
-    path('favorites/', views.favorites, name='favorites')
+    path('favorites/', views.favorites, name='favorites'),
     path('password_reset/', auth_views.PasswordResetView.as_view(), name='password_reset'),
     path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
     path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(success_url='/login'), name='password_reset_confirm'),

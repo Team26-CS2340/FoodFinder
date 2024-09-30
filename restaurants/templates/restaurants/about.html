@@ -1,26 +1,56 @@
-
-
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Home{% endblock %}
+{% block title %}About Us{% endblock %}
 
 {% block content %}
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Us</title>
     <link rel="stylesheet" href="{% static 'styles.css' %}">
+    <style>
+        main {
+            text-align: center; /* Center the header text */
+            margin: 50px; /* Set margin for the main content */
+            position: relative; /* Make the main section a positioning context */
+        }
+
+        p {
+            text-align: left; /* Left-align the paragraph text */
+            margin: 10px 0; /* Adjust the top and bottom margin for paragraphs */
+        }
+
+        .ramen-icon {
+            font-size: 40px; /* Adjust size of the icon */
+            color: black; /* Set the icon color */
+            vertical-align: middle; /* Align icon vertically with text */
+            margin-left: 10px; /* Space between title and icon */
+        }
+    </style>
 </head>
 <body>
     <header>
-        <h1 style="text-align: center; margin: 30px 0;">About Us</h1>
+        <h1 style="text-align: center; margin: 50px 0;">
+            About Us
+            <i class="fas fa-utensils ramen-icon"></i> <!-- Ramen Bowl Icon -->
+        </h1>
     </header>
     <main>
-        <p>Welcome to our website! We are passionate about providing high-quality content and services.</p>
-        <p>Our team is dedicated to making your experience enjoyable and informative.</p>
+        <p>Welcome to FindDining, your ultimate guide to discovering nearby restaurants! We are dedicated to helping food lovers find the best dining options in their area.</p>
+
+        <p>At FindDining, we understand that a great meal starts with a great choice. That's why we've curated a comprehensive platform that allows you to explore a wide variety of restaurants, from cozy cafes to elegant dining establishments. Our user-friendly interface makes it easy to search for restaurants based on location, cuisine, and customer reviews.</p>
+
+        <p>Our mission is to connect you with the culinary experiences that suit your tastes. Whether you’re in the mood for a quick bite or planning a special night out, FindDining has you covered with up-to-date information on the best dining spots near you.</p>
+
+        <p>Join us at FindDining and embark on a delicious journey of exploration and discovery, where every meal is an opportunity to savor new flavors and experiences.</p>
+
+        <p>Thank you for choosing us as your trusted companion in the world of dining. We look forward to helping you find your next favorite restaurant!</p>
     </main>
 </body>
 
 {% endblock %}
+
+
+
+

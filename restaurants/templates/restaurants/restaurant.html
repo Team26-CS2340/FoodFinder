@@ -38,27 +38,53 @@
             border: 1px solid #ccc;
             padding: 10px;
             margin-bottom: 10px;
+            position: relative;
+        }
+        /* Heart icon */
+        .heart {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            cursor: pointer;
+            font-size: 24px;
+            color: gray;
+            transition: color 0.3s;
+        }
+        .heart:hover {
+            color: red;
+        }
+        .heart.selected {
+            color: red;
         }
     </style>
     <script>
-        function handleCuisineSearch() {
-            const nearMeCheckbox = document.querySelector('input[name="near_me"]');
+        // Function to toggle favorite
+        function toggleFavorite(restaurant) {
+            const heartIcon = document.getElementById(`heart-${restaurant.name}`);
+            heartIcon.classList.toggle('selected');
 
-            if (nearMeCheckbox.checked) {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(function(position) {
-                        document.querySelector('input[name="latitude"]').value = position.coords.latitude;
-                        document.querySelector('input[name="longitude"]').value = position.coords.longitude;
-                        document.getElementById("cuisine-form").submit();
-                    }, function(error) {
-                        alert("Error getting location. Please allow location access.");
-                    });
-                } else {
-                    alert("Geolocation is not supported by this browser.");
-                }
+            let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+
+            if (heartIcon.classList.contains('selected')) {
+                // Add to favorites
+                favorites.push(restaurant);
             } else {
-                document.getElementById("cuisine-form").submit();
+                // Remove from favorites
+                favorites = favorites.filter(fav => fav.name !== restaurant.name);
             }
+
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+        }
+
+        // Load favorites on page load
+        window.onload = function() {
+            const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+            favorites.forEach(favorite => {
+                const heartIcon = document.getElementById(`heart-${favorite.name}`);
+                if (heartIcon) {
+                    heartIcon.classList.add('selected');
+                }
+            });
         }
     </script>
 </head>
@@ -66,80 +92,76 @@
     <div class="restaurant-container">
         <h1>Search for a Restaurant</h1>
 
-        <!-- Search by Restaurant Name -->
-        <form method="post">
-            {% csrf_token %}
-            <div class="search-container">
-                <input type="text" name="restaurant_name" placeholder="Enter restaurant name">
-                <button type="submit">Search by Name</button>
-            </div>
-        </form>
+        <!-- Restaurant List -->
+        <div class="cuisine-restaurants">
+            <ul>
+                {% for restaurant in cuisine_restaurants %}
+                    <li>
+                        <h3>{{ restaurant.name }}</h3>
+                        <p><strong>Address:</strong> {{ restaurant.formatted_address }}</p>
+                        <p><strong>Rating:</strong> {{ restaurant.rating }} ({{ restaurant.user_ratings_total }} ratings)</p>
+                        <p><strong>Business Status:</strong> {{ restaurant.business_status }}</p>
+                        <p><strong>Price Level:</strong> {{ restaurant.price_level }}</p>
+                        <p><strong>Google Maps URL:</strong> <a href="https://maps.google.com/?q={{ restaurant.name|urlencode }}" target="_blank">View on Google Maps</a></p>
+                        <!-- Heart icon to add to favorites -->
+                        <span class="heart" id="heart-{{ restaurant.name }}" onclick="toggleFavorite({ name: '{{ restaurant.name }}', address: '{{ restaurant.formatted_address }}', rating: '{{ restaurant.rating }}' })">♥</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
+Step 2: Create the favorites page to display the selected restaurants
+Now, we'll create a favorites.html page that retrieves and displays the restaurants from local storage.
 
-        <!-- Search by Cuisine with Near Me option -->
-        <form method="post" id="cuisine-form">
-            {% csrf_token %}
-            <div class="search-container">
-                <input type="text" name="cuisine_type" placeholder="Enter cuisine type">
-                <!-- Hidden fields to store location coordinates -->
-                <input type="hidden" name="latitude" value="">
-                <input type="hidden" name="longitude" value="">
-                <!-- Checkbox for Near Me -->
-                <label>
-                    <input type="checkbox" name="near_me">
-                    Near Me
-                </label>
-                <button type="button" onclick="handleCuisineSearch()">Search by Cuisine</button>
-            </div>
-        </form>
+favorites.html:
+html
+Copy code
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Favorites</title>
+    <style>
+        .restaurant-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .restaurant-details {
+            margin-top: 20px;
+        }
+        .restaurant-details p {
+            margin: 5px 0;
+        }
+    </style>
+    <script>
+        window.onload = function() {
+            const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+            const favoritesList = document.getElementById('favorites-list');
 
-        <!-- Display errors if any -->
-        {% if error %}
-            <div class="error">
-                <p>{{ error }}</p>
-            </div>
-        {% endif %}
-
-        <!-- Display restaurant details if available -->
-        {% if restaurant %}
-            <div class="restaurant-details">
-                <h2>{{ restaurant.name }}</h2>
-                <p><strong>Address:</strong> {{ restaurant.formatted_address }}</p>
-                <p><strong>Rating:</strong> {{ restaurant.rating }} ({{ restaurant.user_ratings_total }} ratings)</p>
-                <p><strong>Phone:</strong> {{ restaurant.formatted_phone_number }}</p>
-                <p><strong>Business Status:</strong> {{ restaurant.business_status }}</p>
-                <p><strong>Price Level:</strong> {{ restaurant.price_level }}</p>
-                <p><strong>Website:</strong> <a href="{{ restaurant.website }}" target="_blank">{{ restaurant.website }}</a></p>
-                <p><strong>Google Maps:</strong> <a href="{{ restaurant.url }}" target="_blank">View on Google Maps</a></p>
-            </div>
-
-            <!-- Display restaurant photos if available -->
-            {% if photos %}
-                <div class="gallery">
-                    {% for photo in photos %}
-                        <img src="{{ photo }}" alt="Restaurant Photo">
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endif %}
-
-        <!-- Display restaurants for the selected cuisine -->
-        {% if cuisine_restaurants %}
-            <h2>Restaurants serving {{ cuisine_type }} cuisine</h2>
-            <div class="cuisine-restaurants">
-                <ul>
-                    {% for restaurant in cuisine_restaurants %}
-                        <li>
-                            <h3>{{ restaurant.name }}</h3>
-                            <p><strong>Address:</strong> {{ restaurant.formatted_address }}</p>
-                            <p><strong>Rating:</strong> {{ restaurant.rating }} ({{ restaurant.user_ratings_total }} ratings)</p>
-                            <p><strong>Business Status:</strong> {{ restaurant.business_status }}</p>
-                            <p><strong>Price Level:</strong> {{ restaurant.price_level }}</p>
-                            <p><strong>Google Maps URL:</strong> <a href="https://maps.google.com/?q={{ restaurant.name|urlencode }}" target="_blank">View on Google Maps</a></p>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        {% endif %}
+            if (favorites.length === 0) {
+                favoritesList.innerHTML = '<p>No favorites selected yet.</p>';
+            } else {
+                favorites.forEach(favorite => {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `
+                        <h3>${favorite.name}</h3>
+                        <p><strong>Address:</strong> ${favorite.address}</p>
+                        <p><strong>Rating:</strong> ${favorite.rating}</p>
+                    `;
+                    favoritesList.appendChild(listItem);
+                });
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="restaurant-container">
+        <h1>Your Favorite Restaurants</h1>
+        <ul id="favorites-list"></ul>
     </div>
 </body>
 </html>

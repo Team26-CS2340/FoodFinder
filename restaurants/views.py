@@ -390,3 +390,9 @@ def search_restaurants(request):
 
     # If not a POST request, return an error response
     return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+def about(request):
+    return render(request, "restaurants/about.html")
+
+def favorites(request):
+    return render(request, "restaurants/favorites.html")

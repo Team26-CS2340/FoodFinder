@@ -1,6 +1,12 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Restaurant Details{% endblock %}
+
+{% block content %}
 <div class="container mt-5">
     {% if restaurant %}
-        <h2 class="text-center">{{ restaurant.name }}</h2>
+        <h2 class="text-center" style="font-size: 3rem; margin-bottom: 1.5rem;">{{ restaurant.name }}</h2>
         <p><strong>Address:</strong> {{ restaurant.formatted_address }}</p>
         <p><strong>Rating:</strong> {{ restaurant.rating }}</p>
         <p><strong>Phone:</strong> {{ restaurant.formatted_phone_number }}</p>
@@ -13,25 +19,63 @@
         </p>
         <p><strong>Price Level:</strong> {{ restaurant.price_level }}</p>
         <p><strong>Business Status:</strong> {{ restaurant.business_status }}</p>
-        <p><a href="{{ restaurant.website }}" target="_blank">Visit Website</a></p>
+        <p>
+            <a href="{{ restaurant.website }}" target="_blank" class="btn btn-outline-dark visit-website-btn">Visit Website</a>
+        </p>
 
         <!-- Google Maps -->
-        <h3>Location</h3>
+        <h3 style="font-size: 2.25rem; margin-top: 2rem;">Location</h3>
         <div id="map" style="height: 400px; width: 100%;"></div>
 
-        <h3>Photos</h3>
-        <div class="row">
-            {% for photo in photos %}
-            <div class="col-md-4 mb-4">
-                <img src="{{ photo }}" class="img-fluid rounded" alt="Restaurant Photo">
-            </div>
-            {% endfor %}
+        <!-- Photos Carousel -->
+        <h3 style="font-size: 2.25rem; margin-top: 2rem;">Photos</h3>
+        <div id="photoCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                {% for photo in photos %}
+                    {% if forloop.counter0|divisibleby:3 %}
+                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                            <div class="row g-3">
+                    {% endif %}
+                    <div class="col-md-4">
+                        <img src="{{ photo }}" class="img-fluid rounded" alt="Restaurant Photo">
+                    </div>
+                    {% if forloop.counter|divisibleby:3 or forloop.last %}
+                            </div> <!-- Close row -->
+                        </div> <!-- Close carousel-item -->
+                    {% endif %}
+                {% endfor %}
+            </div> <!-- Close carousel-inner -->
+
+            <button class="carousel-control-prev" type="button" data-bs-target="#photoCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#photoCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
         </div>
 
     {% else %}
         <p>Restaurant details not available.</p>
     {% endif %}
 </div>
+
+<style>
+    .visit-website-btn {
+        background-color: white;
+        color: black;
+        border-radius: 20px;
+        border: 2px solid black;
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .visit-website-btn:hover {
+        background-color: lightgrey; /* Change to a lighter grey on hover */
+        color: #333; /* Optional: darker text color on hover */
+        border-color: lightgrey; /* Change border color on hover */
+    }
+</style>
 
 <script>
     function initMap() {
@@ -47,3 +91,9 @@
     }
 </script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCqc613-d11926rxvX6oXwU2wYp3baIuP8&callback=initMap"></script>
+{% endblock %}
+
+
+
+
+

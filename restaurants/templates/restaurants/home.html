@@ -4,14 +4,36 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<div class="position-relative overflow-hidden p-3 p-md-5 m-md-3 text-center bg-body-tertiary">
-    <div class="col-md-6 p-lg-5 mx-auto my-5">
-        <h1 class="display-3 fw-bold">Designed for Foodies</h1>
-        <h3 class="fw-normal text-muted mb-3">Eat anything you want with BLEHBLEHBLEH</h3>
+<style>
+    .icon-link {
+        color: black; /* Set the text color to black */
+        text-decoration: none; /* Remove underline */
+        padding: 0.5rem 1rem; /* Add some padding to make it look like a button */
+        border: 1px solid transparent; /* Transparent border */
+        border-radius: 5px; /* Rounded corners */
+        transition: background-color 0.3s, color 0.3s; /* Smooth transition for background color and text color */
+        display: inline-flex; /* Use flexbox to center content */
+        align-items: center; /* Center vertically */
+        justify-content: center; /* Center horizontally */
+        min-width: 100px; /* Set a minimum width */
+    }
+
+    .icon-link:hover {
+        background-color: grey; /* Change background to grey on hover */
+        color: white; /* Change text color to white on hover */
+        border: 1px solid grey; /* Add border when hovered */
+    }
+
+</style>
+
+<div class="bgcolor">
+    <div class="position-relative overflow-hidden p-3 p-md-5 m-md-3 text-center" style="background-image: url('{% static 'restaurants/images/homeImg.jpg' %}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+    <div class="col-md-6 p-lg-5 mx-auto my-5" style="background-color: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); padding: 2rem; border-radius: 10px;">
+        <h1 class="display-3 fw-bold">FindDining</h1>
+        <h3 class="fw-normal text-muted mb-3">Here's to your next destination</h3>
         <div class="d-flex gap-3 justify-content-center lead fw-normal">
-            <a class="icon-link" href="{% url 'restaurant_list'%}">
+            <a class="icon-link justify-content-center " href="{% url 'restaurant_list' %}">
                 Explore
-                <svg class="bi"><use xlink:href="#chevron-right"></use></svg>
             </a>
         </div>
     </div>
@@ -21,31 +43,54 @@
 {% if favorite_restaurants %}
 <div class="container mt-5">
     <h2 class="text-center">For You: {{ user.first_name }}'s Favorite Restaurants</h2>
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
-        {% for restaurant in favorite_restaurants %}
-        <div class="col">
-          <div class="card shadow-sm">
-            <div class="fixed-image-container">
-                <img src="{{ restaurant.photo_url }}" class="fixed-image card-img-top" alt="{{ restaurant.name }}">
-            </div>
-            <div class="card-body">
-              <h5 class="card-title">{{ restaurant.name }}</h5>
-              <p class="card-text">{{ restaurant.vicinity }}</p>
-              <p class="card-text"><strong>Rating:</strong> {{ restaurant.rating }}</p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                        <a href="{% url 'restaurant_details' restaurant.name %}" class="btn btn-sm btn-outline-secondary">View</a>
+    <div id="restaurantCarousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            {% for restaurant in favorite_restaurants %}
+                {% if forloop.counter0|divisibleby:3 %}
+                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        <div class="row g-3">
+                {% endif %}
+                <div class="col-md-4">
+                    <div class="card shadow-sm">
+                        <div class="fixed-image-container">
+                            <img src="{{ restaurant.photo_url }}" class="fixed-image card-img-top" alt="{{ restaurant.name }}">
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ restaurant.name }}</h5>
+                            <p class="card-text">{{ restaurant.vicinity }}</p>
+                            <p class="card-text"><strong>Rating:</strong> {{ restaurant.rating }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group">
+                                    <a href="{% url 'restaurant_details' restaurant.name %}" class="btn btn-sm btn-outline-secondary">View</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        {% endfor %}
+                {% if forloop.counter|divisibleby:3 or forloop.last %}
+                        </div> <!-- Close row -->
+                    </div> <!-- Close carousel-item -->
+                {% endif %}
+            {% endfor %}
+        </div> <!-- Close carousel-inner -->
+
+        <button class="carousel-control-prev" type="button" data-bs-target="#restaurantCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#restaurantCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
     </div>
 </div>
 {% else %}
     <p class="text-center mt-5">No favorite restaurants found for your favorite cuisine.</p>
 {% endif %}
 
+</div>
+
+
 
 {% endblock %}
+
