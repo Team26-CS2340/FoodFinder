@@ -30,21 +30,22 @@
                 {% if restaurants %}
                     {% for restaurant in restaurants %}
                     <div class="col-md-4 mb-4">
-                        <div class="card h-100">
+                        <div class="card h-100 shadow-sm">
                             {% if restaurant.images %}
-                                <img src="{{ restaurant.images.0 }}" alt="Restaurant Image" class="card-img-top restaurant-image fixed-image restaurant-image">
+                                <img src="{{ restaurant.images.0 }}" alt="Restaurant Image" class="card-img-top restaurant-image">
                             {% endif %}
 
                             <div class="card-body">
                                 <h5 class="card-title">{{ restaurant.name }}</h5>
-                                <p class="card-text"><strong>Cuisine:</strong> {{ restaurant.cuisine }}</p>
                                 <p class="card-text"><strong>Rating:</strong> {{ restaurant.rating }} / 5</p>
                                 <p class="card-text"><strong>Address:</strong> {{ restaurant.address }}</p>
                                 <div class="btn-group">
-                                    <a href="{% url 'restaurant_details' restaurant.name %}" class="btn btn-sm btn-outline-secondary">View</a>
-                                    <!-- Like/Unlike button -->
+                                    <a href="{% url 'restaurant_details' restaurant.name %}" class="btn btn-sm btn-outline-secondary">
+                                        View
+                                    </a>
                                     {% if request.user.is_authenticated %}
-                                        <a href="{% url 'like_restaurant' restaurant.name restaurant.address %}" class="btn btn-sm btn-outline-primary">
+                                        <a href="{% url 'like_restaurant' restaurant.name restaurant.address %}"
+                                           class="btn btn-sm {% if restaurant.name in user_favorites %}btn-like{% else %}btn-outline-primary{% endif %}">
                                             {% if restaurant.name in user_favorites %}
                                                 Unlike
                                             {% else %}
@@ -180,6 +181,5 @@
         setTimeout(getLocationAndSend, 5000);  // Retry after 5 seconds
     }
 </script>
-
 
 {% endblock %}

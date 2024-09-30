@@ -1,16 +1,15 @@
-
 {% extends 'base.html' %}
 
-{% block title %}InteractiveMap{% endblock %}
+{% block title %}Interactive Map with Restaurant Search{% endblock %}
 
 {% block content %}
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- [Your existing head content] -->
     <!-- Load Google Maps JavaScript API with Places Library -->
     <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places&callback=initMap" defer></script>
     <style>
+        /* [Your existing styles] */
         #map {
             height: 80vh;
             width: 100%;
@@ -24,16 +23,21 @@
             width: 300px;
             padding: 10px;
         }
+        .search-container button {
+            padding: 10px;
+        }
     </style>
 </head>
 <body>
+    <!-- [Your existing body content] -->
     <br>
     <br>
     <h2 class="text-center">Interactive Map with Restaurant Search</h2>
 
-    <!-- Search bar for restaurant search -->
+    <!-- Search bar for restaurant name or cuisine type -->
     <div class="search-container">
-        <input id="autocomplete" type="text" placeholder="Search for restaurants...">
+        <input id="search-input" type="text" placeholder="Search for restaurants or cuisine...">
+        <button id="search-button">Search</button>
     </div>
 
     <!-- The map container -->
@@ -41,72 +45,101 @@
 
     <script>
         let map;
-        let autocomplete;
-        let marker;
-        let infoWindow;
-        let service;
+let marker;
+let infoWindow;
+let service;
+let markers = []; // To keep track of all markers
 
-        // Initialize and add the map
-        function initMap() {
-            const defaultLocation = {
-                lat: parseFloat('{{ default_location.lat }}'),
-                lng: parseFloat('{{ default_location.lng }}')
-            };
+// Initialize and add the map
+function initMap() {
+    const defaultLocation = {
+        lat: parseFloat('{{ default_location.lat }}'),
+        lng: parseFloat('{{ default_location.lng }}')
+    };
 
-            // Create the map centered at the default location
-            map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 13,
-                center: defaultLocation,
-            });
+    // Create the map centered at the default location
+    map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 13,
+        center: defaultLocation,
+    });
 
-            // Create the autocomplete object and associate it with the search input
-            autocomplete = new google.maps.places.Autocomplete(document.getElementById('autocomplete'));
-            autocomplete.setFields(['place_id', 'geometry', 'name', 'formatted_address']);
+    // Create an info window (this will be reused for all restaurant markers)
+    infoWindow = new google.maps.InfoWindow();
 
-            // Listen for when a place is selected in the autocomplete search
-            autocomplete.addListener('place_changed', onPlaceChanged);
+    // Create a service to fetch place details
+    service = new google.maps.places.PlacesService(map);
 
-            // Create a service to fetch place details
-            service = new google.maps.places.PlacesService(map);
+    // Event listener for the search button
+    document.getElementById('search-button').addEventListener('click', performSearch);
 
-            // Create an info window (this will be reused for all restaurant markers)
-            infoWindow = new google.maps.InfoWindow();
+    // Optionally, allow pressing "Enter" to trigger the search
+    document.getElementById('search-input').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            performSearch();
         }
+    });
+}
 
-        // Handle when a place is selected from autocomplete
-        function onPlaceChanged() {
-            const place = autocomplete.getPlace();
+// Perform a search based on the input
+function performSearch() {
+    const query = document.getElementById('search-input').value;
 
-            if (!place.geometry) {
-                console.error("No geometry available for the selected place.");
-                return;
+    if (!query) {
+        alert('Please enter a restaurant name or cuisine type.');
+        return;
+    }
+
+    // Clear existing markers
+    clearMarkers();
+
+    // Create a request object for text search
+    const request = {
+        location: map.getCenter(),
+        radius: '5000', // 5 km radius
+        query: query + ' restaurant', // Append 'restaurant' to focus on restaurants
+    };
+
+    service.textSearch(request, function (results, status) {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+            // Loop through the results and create markers
+            for (let i = 0; i < results.length; i++) {
+                createMarker(results[i]);
             }
-
-            // Zoom in to the selected place
-            map.setCenter(place.geometry.location);
-            map.setZoom(15);
-
-            // Add a marker at the selected place
-            if (marker) {
-                marker.setMap(null);  // Remove the previous marker if any
+            // Adjust map bounds to fit all markers
+            let bounds = new google.maps.LatLngBounds();
+            for (let i = 0; i < markers.length; i++) {
+                bounds.extend(markers[i].getPosition());
             }
-            marker = new google.maps.Marker({
-                position: place.geometry.location,
-                map: map,
-            });
-
-            // Fetch more details about the place
-            service.getDetails({ placeId: place.place_id }, (placeDetails, status) => {
-                if (status === google.maps.places.PlacesServiceStatus.OK) {
-                    displayPlaceDetails(placeDetails, marker);
-                } else {
-                    console.error("Failed to get place details.");
-                }
-            });
+            map.fitBounds(bounds);
+        } else {
+            alert('No results found.');
         }
+    });
+}
 
-        // Display place details in the info window
-        // Display place details in the info window
+// Create a marker for each place
+function createMarker(place) {
+    const marker = new google.maps.Marker({
+        map: map,
+        position: place.geometry.location,
+    });
+
+    // Add marker to the markers array
+    markers.push(marker);
+
+    // Add click listener to show place details
+    google.maps.event.addListener(marker, 'click', function () {
+        service.getDetails({ placeId: place.place_id }, (placeDetails, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK) {
+                displayPlaceDetails(placeDetails, marker);
+            } else {
+                console.error("Failed to get place details.");
+            }
+        });
+    });
+}
+
+// Display place details in the info window
 function displayPlaceDetails(placeDetails, marker) {
     // Encode the restaurant name to ensure it is URL-friendly
     const encodedRestaurantName = encodeURIComponent(placeDetails.name);
@@ -130,6 +163,13 @@ function displayPlaceDetails(placeDetails, marker) {
     infoWindow.open(map, marker);
 }
 
+// Clear all markers from the map
+function clearMarkers() {
+    for (let i = 0; i < markers.length; i++) {
+        markers[i].setMap(null);
+    }
+    markers = [];
+}
     </script>
 
 </body>
