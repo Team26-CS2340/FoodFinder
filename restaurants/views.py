@@ -447,7 +447,7 @@ def favorites_list(request):
     restaurant_details_list = []
 
     for favorite in favorites:
-        restaurant, photos, error = get_restaurant_details(favorite.restaurant_name)
+        restaurant, photos, reviews, error = get_restaurant_details(favorite.restaurant_name)
         if restaurant and not error:
             # Append the restaurant details along with the photos
             restaurant_details_list.append({
