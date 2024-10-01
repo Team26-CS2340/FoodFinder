@@ -116,6 +116,21 @@
                 <h3>Location</h3>
                 <div id="map" style="height: 300px; width: 100%;"></div>
             </div>
+            <h3>Google Reviews</h3>
+            {% if reviews %}
+                <div class="list-group">
+                    {% for review in reviews %}
+                        <div class="list-group-item mb-2">
+                            <h5 class="mb-1">{{ review.author_name }} - {{ review.rating }}/5</h5>
+                            <p class="mb-1">{{ review.text }}</p>
+                            <small>{{ review.time }}</small>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>No reviews available.</p>
+            {% endif %}
+
         </div>
 
     {% else %}
