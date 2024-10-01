@@ -48,6 +48,9 @@ def signup_view(request):
     return render(request, 'restaurants/register.html', {'form': form})
 
 
+
+
+
 def restaurant_list(request):
     closest_restaurants = []
     cuisine_types = ['Italian', 'Chinese', 'Mexican', 'American']  # Example cuisines
@@ -122,6 +125,7 @@ def restaurant_list(request):
         'cuisine_types': cuisine_types,
         'user_favorites': user_favorites
     })
+
 
 
 def home(request):
@@ -205,21 +209,30 @@ def get_restaurant_details(restaurant_name):
             photo_url = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=1600&photoreference={photo_reference}&key={settings.GOOGLE_MAPS_API_KEY}"
             photos.append(photo_url)
 
-    return restaurant, photos, None
+    # Extract reviews (if available)
+    reviews = []
+    if restaurant.get('reviews'):
+        for review in restaurant['reviews']:
+            reviews.append({
+                'author_name': review.get('author_name'),
+                'rating': review.get('rating'),
+                'text': review.get('text'),
+                'time': review.get('relative_time_description')  # This often includes how long ago the review was posted
+            })
 
+    return restaurant, photos, reviews, None
 
 
 def restaurant_details_view(request, restaurant_name):
     # Get the restaurant details using the provided method
-    restaurant_details, photos, error = get_restaurant_details(restaurant_name)
-
+    restaurant, photos, reviews, error = get_restaurant_details(restaurant_name)
     if error:
-        return render(request, 'restaurants/restaurantdetails.html', {'error': error})
+        return render(request, 'error.html', {'error_message': error})
 
-    # Pass the restaurant details and photos to the template
     context = {
-        'restaurant': restaurant_details,
-        'photos': photos
+        'restaurant': restaurant,
+        'photos': photos,
+        'reviews': reviews,
     }
     return render(request, 'restaurants/restaurantdetails.html', context)
 
@@ -446,3 +459,33 @@ def favorites_list(request):
             })
 
     return render(request, 'restaurants/favorites.html', {'restaurant_details_list': restaurant_details_list})
+
+
+def get_cuisine(request, restaurant_name):
+    API_KEY = 'Z1-cBLAvmhrsFcIlUXksdT5lgUKBaZSvZFSckSC3AO7REMeFVSBAgFcRxMDF0PCIccyxAh4mjVO1TcZ9UdjgX7wYOGpEPiaNoXzfCEQVdXICSBZTXA5Aql9WJhv7ZnYx'  # Your Yelp API key
+    headers = {
+        'Authorization': f'Bearer {API_KEY}'
+    }
+    latitude = 33.7490  # Example latitude (Atlanta)
+    longitude = -84.3880  # Example longitude (Atlanta)
+    params = {
+        'term': restaurant_name,
+        'latitude': latitude,
+        'longitude': longitude,
+        'limit': 1  # Get only one result for simplicity
+    }
+    response = requests.get('https://api.yelp.com/v3/businesses/search', headers=headers, params=params)
+
+    if response.status_code == 200:
+        data = response.json()
+        if 'businesses' in data and len(data['businesses']) > 0:
+            business = data['businesses'][0]
+            if business['categories']:
+                first_cuisine = business['categories'][0]['title']
+                return JsonResponse({'cuisine': first_cuisine})
+
+    return JsonResponse({'cuisine': 'Not available'}, status=404)
+
+def about(request):
+    return render(request, "restaurants/about.html")
+

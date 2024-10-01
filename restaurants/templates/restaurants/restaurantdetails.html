@@ -82,6 +82,7 @@
         <div class="text-center mb-5">
             <p class="lead"><strong>Address:</strong> {{ restaurant.formatted_address }}</p>
             <p class="lead"><strong>Phone:</strong> {{ restaurant.formatted_phone_number }}</p>
+            <p class="lead"><strong>Cuisine:</strong> <span id="cuisine">Loading...</span></p> <!-- Cuisine field -->
         </div>
 
         <!-- Restaurant Additional Info -->
@@ -115,12 +116,49 @@
                 <h3>Location</h3>
                 <div id="map" style="height: 300px; width: 100%;"></div>
             </div>
+            <h3>Google Reviews</h3>
+            {% if reviews %}
+                <div class="list-group">
+                    {% for review in reviews %}
+                        <div class="list-group-item mb-2">
+                            <h5 class="mb-1">{{ review.author_name }} - {{ review.rating }}/5</h5>
+                            <p class="mb-1">{{ review.text }}</p>
+                            <small>{{ review.time }}</small>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>No reviews available.</p>
+            {% endif %}
+
         </div>
 
     {% else %}
         <p class="text-center">Restaurant details not available.</p>
     {% endif %}
 </div>
+
+<!-- JavaScript to Fetch Cuisine -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const restaurantName = "{{ restaurant.name }}";
+        const cuisineElement = document.getElementById('cuisine');
+
+        fetch(`/get-cuisine/${restaurantName}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.cuisine) {
+                    cuisineElement.textContent = data.cuisine;
+                } else {
+                    cuisineElement.textContent = 'Cuisine not available';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching cuisine:', error);
+                cuisineElement.textContent = 'Cuisine not available';
+            });
+    });
+</script>
 
 <!-- Google Maps Integration -->
 <script>
