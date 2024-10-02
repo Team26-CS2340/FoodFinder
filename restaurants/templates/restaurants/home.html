@@ -13,6 +13,14 @@
         margin: 0; /* Remove default margin */
     }
 
+    .blurcard {
+    background-image: url("{% static 'restaurants/images/homeImg.jpg' %}");
+    background-size: cover; /* Cover the entire background */
+    background-position: center; /* Center the image */
+    height: 50vh; /* Full height of the viewport */
+    margin: 0; /* Remove default margin */
+    }
+
     .blur {
         backdrop-filter: blur(1px); /* Increased blur strength */
         background-color: rgba(255, 255, 255, 0.7); /* Darker semi-transparent background */
@@ -94,20 +102,28 @@
         font-size: 1.5rem; /* Font size */
         text-align: center; /* Center alignment */
     }
-</style>
 
-<div class="position-relative overflow-hidden p-3 p-md-5 m-md-3 text-center blur">
+    .footer-default {
+        color: white; /* Default footer text color */
+    }
+</style>
+<br>
+<br>
+
+
+<div class="position-relative overflow-hidden p-3 p-md-5 m-md-3 text-center blur blurcard">
     <div class="col-md-6 p-lg-5 mx-auto my-5">
         <h1 class="display-3 fw-normal" style="color: white; font-family: Arial, sans-serif; text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.5);">FindDining</h1>
-        <h3 class="fw-normal text-muted mb-3" style="color: white; font-family: Arial, sans-serif; text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);">Here's to your next destination.</h3>
+        <h3 class="fw-normal mb-3" style="color: white; font-family: Arial, sans-serif; text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);">Here's to your next destination.</h3>
         <div class="d-flex gap-3 justify-content-center lead fw-normal"></div>
     </div>
 </div>
 
+
 <!-- For You Section -->
 {% if favorite_restaurants %}
 <div class="container mt-5">
-    <h2 class="text-center" style="color: white; text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.5); margin-bottom: 2rem;">For You: {{ user.first_name }}'s Favorite Restaurants</h2>
+    <h2 class="text-center" style="color: white; text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.5); margin-bottom: 2rem;"> Personalized Reccomendations for {{ user.first_name }}</h2>
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
         {% for restaurant in favorite_restaurants %}
         <div class="col">
@@ -216,11 +232,16 @@
     </div>
 </section>
 
+{% block footer %}
+<style>
+    .footer-default {
+        color: white; /* Change footer text color */
+    }
+    .footer-default a {
+        color: white; /* Change link color in the footer */
+    }
+</style>
+
 {% endblock %}
 
-
-
-
-
-
-
+{% endblock %}

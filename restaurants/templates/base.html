@@ -55,34 +55,35 @@
 
     <!-- Footer Section -->
     <div class="container">
-    <footer class="py-3 my-4">
-        <ul class="nav justify-content-center border-bottom pb-3 mb-3">
-            <li class="nav-item">
-                <a href="{% url 'home' %}" class="nav-link px-2 {% if request.resolver_match.url_name == 'home' %}text-warning{% else %}text-white{% endif %}">
-                    Home
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'restaurant_list' %}" class="nav-link px-2 {% if request.resolver_match.url_name == 'restaurant_list' %}text-warning{% else %}text-white{% endif %}">
-                    Restaurants
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'map' %}" class="nav-link px-2 {% if request.resolver_match.url_name == 'map' %}text-warning{% else %}text-white{% endif %}">
-                    Map
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="#" class="nav-link px-2 text-white">About</a>
-            </li>
-        </ul>
-        <p class="text-center text-white">© 2024 Company, Inc</p>
-    </footer>
-</div>
-
+        <footer class="py-3 my-4 footer-white"> <!-- Added 'footer-white' class -->
+            <ul class="nav justify-content-center border-bottom pb-3 mb-3">
+                <li class="nav-item">
+                    <a href="{% url 'home' %}" class="nav-link px-2 {% if request.resolver_match.url_name == 'home' %}text-warning{% else %}text-black{% endif %}">
+                        Home
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'restaurant_list' %}" class="nav-link px-2 {% if request.resolver_match.url_name == 'restaurant_list' %}text-warning{% else %}text-black{% endif %}">
+                        Restaurants
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'map' %}" class="nav-link px-2 {% if request.resolver_match.url_name == 'map' %}text-warning{% else %}text-black{% endif %}">
+                        Map
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link px-2 text-black">About</a>
+                </li>
+            </ul>
+            <p class="text-center text-black">© 2024 Company, Inc</p>
+        </footer>
+    </div>
 
     <!-- Bootstrap JS and Popper.js -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
+
+

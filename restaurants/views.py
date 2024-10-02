@@ -462,7 +462,7 @@ def favorites_list(request):
 
 
 def get_cuisine(request, restaurant_name):
-    API_KEY = 'Z1-cBLAvmhrsFcIlUXksdT5lgUKBaZSvZFSckSC3AO7REMeFVSBAgFcRxMDF0PCIccyxAh4mjVO1TcZ9UdjgX7wYOGpEPiaNoXzfCEQVdXICSBZTXA5Aql9WJhv7ZnYx'  # Your Yelp API key
+    API_KEY = settings.YELP_API_KEY;  # Your Yelp API key
     headers = {
         'Authorization': f'Bearer {API_KEY}'
     }
